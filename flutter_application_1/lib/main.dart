@@ -1,26 +1,29 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_application_1/views/screens/authentication/sign_in.dart';
-
-import 'package:flutter/material.dart';
 import 'package:flutter_application_1/supabase_auth_ui.dart';
-
 import 'package:flutter_application_1/views/screens/authentication/home.dart';
-import 'package:flutter_application_1/views/screens/authentication/sign_in.dart';
 import 'package:flutter_application_1/views/screens/authentication/magic_link.dart';
 import 'package:flutter_application_1/views/screens/authentication/update_password.dart';
 import 'package:flutter_application_1/views/screens/authentication/phone_sign_in.dart';
 import 'package:flutter_application_1/views/screens/authentication/phone_sign_up.dart';
-
 import 'package:flutter_application_1/views/screens/authentication/verify_phone.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 
 void main() async {
-  await Supabase.initialize(
-    url: 'https://mshrjmoigzxwimnnnatu.supabase.co',
-    anonKey:
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1zaHJqbW9pZ3p4d2ltbm5uYXR1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzkxMTk4MjAsImV4cCI6MjA1NDY5NTgyMH0.9oU70sil_DZAyHzbcWQEln-vyqdi5eez7Tf7JwmEr6E',
-  );
+  try {
+    print("loading dotenv ...");
+    await dotenv.load(fileName: ".env");
+    print("dotenv loaded!");
+    print("initializing supabase ...");
+    await Supabase.initialize(
+        url: dotenv.env['SUPABASE_URL']!,
+        anonKey: dotenv.env['SUPABASE_ANON_KEY']!);
+  }
+  catch (e) {
+    print("Error loading dotenv: $e");
+  }
 
   runApp(const MainApp());
 }
