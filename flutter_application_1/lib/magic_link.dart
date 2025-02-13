@@ -1,32 +1,35 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/supabase_auth_ui.dart';
 
 import 'constants.dart';
 
-class PhoneSignIn extends StatelessWidget {
-  const PhoneSignIn({Key? key}) : super(key: key);
+class MagicLink extends StatelessWidget {
+  const MagicLink({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: appBar('Phone Sign In'),
+      appBar: appBar('Magic Link'),
       body: Padding(
         padding: const EdgeInsets.all(24.0),
         child: Column(
           children: [
-            SupaPhoneAuth(
-              authAction: SupaAuthAction.signIn,
+            SupaMagicAuth(
               onSuccess: (response) {
                 Navigator.of(context).pushReplacementNamed('/home');
               },
+              redirectUrl: kIsWeb
+                  ? null
+                  : 'io.supabase.flutterquickstart://login-callback',
             ),
             TextButton(
               child: const Text(
-                'Don\'t have an account? Sign Up',
+                'Already have an account? Sign In',
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
               onPressed: () {
-                Navigator.pushNamed(context, '/');
+                Navigator.pushNamed(context, '/sign_in');
               },
             ),
           ],
