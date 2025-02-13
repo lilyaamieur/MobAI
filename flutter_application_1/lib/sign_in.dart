@@ -49,47 +49,7 @@ class SignUp extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(24.0),
         children: [
-          SupaEmailAuth(
-            redirectTo: kIsWeb ? null : 'io.supabase.flutter://',
-            onSignInComplete: navigateHome,
-            onSignUpComplete: navigateHome,
-            metadataFields: [
-              MetaDataField(
-                prefixIcon: const Icon(Icons.person),
-                label: 'Username',
-                key: 'username',
-                validator: (val) {
-                  if (val == null || val.isEmpty) {
-                    return 'Please enter something';
-                  }
-                  return null;
-                },
-              ),
-              BooleanMetaDataField(
-                label: 'Keep me up to date with the latest news and updates.',
-                key: 'marketing_consent',
-                checkboxPosition: ListTileControlAffinity.leading,
-              ),
-              BooleanMetaDataField(
-                key: 'terms_agreement',
-                isRequired: true,
-                checkboxPosition: ListTileControlAffinity.leading,
-                richLabelSpans: [
-                  const TextSpan(text: 'I have read and agree to the '),
-                  TextSpan(
-                    text: 'Terms and Conditions',
-                    style: const TextStyle(
-                      color: Colors.blue,
-                    ),
-                    recognizer: TapGestureRecognizer()
-                      ..onTap = () {
-                        // Handle tap on Terms and Conditions
-                      },
-                  ),
-                ],
-              ),
-            ],
-          ),
+          
 
           const Divider(),
           optionText,
@@ -103,56 +63,67 @@ class SignUp extends StatelessWidget {
                 padding: const EdgeInsets.all(30),
                 child: Theme(
                   data: darkModeThemeData,
-                  child: SupaEmailAuth(
-                      redirectTo: kIsWeb ? null : 'io.supabase.flutter://',
-                      onSignInComplete: navigateHome,
-                      onSignUpComplete: navigateHome,
-                      prefixIconEmail: null,
-                      prefixIconPassword: null,
-                      localization: const SupaEmailAuthLocalization(
-                          enterEmail: "email",
-                          enterPassword: "password",
-                          dontHaveAccount: "sign up",
-                          forgotPassword: "forgot password"),
-                      metadataFields: [
-                        MetaDataField(
-                          prefixIcon: const Icon(Icons.person),
-                          label: 'Username',
-                          key: 'username',
-                          validator: (val) {
-                            if (val == null || val.isEmpty) {
-                              return 'Please enter something';
-                            }
-                            return null;
-                          },
-                        ),
-                        BooleanMetaDataField(
-                          label:
-                              'Keep me up to date with the latest news and updates.',
-                          key: 'marketing_consent',
-                          checkboxPosition: ListTileControlAffinity.leading,
-                        ),
-                        BooleanMetaDataField(
-                          key: 'terms_agreement',
-                          isRequired: true,
-                          checkboxPosition: ListTileControlAffinity.leading,
-                          richLabelSpans: [
-                            const TextSpan(
-                                text: 'I have read and agree to the '),
-                            TextSpan(
-                              text: 'Terms and Conditions.',
-                              style: const TextStyle(
-                                color: Colors.blue,
-                              ),
-                              recognizer: TapGestureRecognizer()
-                                ..onTap = () {
-                                  //ignore: avoid_print
-                                  print('Terms and Conditions');
-                                },
+                  child: Column(
+                    children: [
+                      SupaEmailAuth(
+                          redirectTo: kIsWeb ? null : 'io.supabase.flutter://',
+                          onSignInComplete: navigateHome,
+                          onSignUpComplete: navigateHome,
+                          prefixIconEmail: null,
+                          prefixIconPassword: null,
+                          localization: const SupaEmailAuthLocalization(
+                              enterEmail: "email",
+                              enterPassword: "password",
+                              dontHaveAccount: "sign up",
+                              forgotPassword: "forgot password"),
+                          metadataFields: [
+                            MetaDataField(
+                              prefixIcon: const Icon(Icons.person),
+                              label: 'Username',
+                              key: 'username',
+                              validator: (val) {
+                                if (val == null || val.isEmpty) {
+                                  return 'Please enter something';
+                                }
+                                return null;
+                              },
                             ),
-                          ],
-                        ),
-                      ]),
+                            BooleanMetaDataField(
+                              label:
+                                  'Keep me up to date with the latest news and updates.',
+                              key: 'marketing_consent',
+                              checkboxPosition: ListTileControlAffinity.leading,
+                            ),
+                            BooleanMetaDataField(
+                              key: 'terms_agreement',
+                              isRequired: true,
+                              checkboxPosition: ListTileControlAffinity.leading,
+                              richLabelSpans: [
+                                const TextSpan(
+                                    text: 'I have read and agree to the '),
+                                TextSpan(
+                                  text: 'Terms and Conditions.',
+                                  style: const TextStyle(
+                                    color: Colors.blue,
+                                  ),
+                                  recognizer: TapGestureRecognizer()
+                                    ..onTap = () {
+                                      //ignore: avoid_print
+                                      print('Terms and Conditions');
+                                    },
+                                ),
+                              ],
+                            ),
+                          ]),
+                      const SizedBox(height: 20),
+                      ElevatedButton(
+                        onPressed: () {
+                          // Handle sign-up action
+                        },
+                        child: const Text('Sign Up'),
+                      ),
+                    ],
+                  ),
                 ),
               )),
 
@@ -175,18 +146,7 @@ class SignUp extends StatelessWidget {
             label: const Text('Sign in with Phone'),
           ),
           spacer,
-          SupaSocialsAuth(
-            colored: true,
-            nativeGoogleAuthConfig: const NativeGoogleAuthConfig(
-              webClientId: 'YOUR_WEB_CLIENT_ID',
-              iosClientId: 'YOUR_IOS_CLIENT_ID',
-            ),
-            enableNativeAppleAuth: false,
-            socialProviders: OAuthProvider.values,
-            onSuccess: (session) {
-              Navigator.of(context).pushReplacementNamed('/home');
-            },
-          ),
+
         ],
       ),
     );
