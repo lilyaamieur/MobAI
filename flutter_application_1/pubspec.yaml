@@ -9,6 +9,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  supabase_flutter: ^2.5.4  # Check for the latest version
+  image_picker: ^1.0.7 
 
 dev_dependencies:
   flutter_test:
