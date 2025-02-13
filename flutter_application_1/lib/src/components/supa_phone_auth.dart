@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_application_1/utils/constants.dart';
+import 'package:flutter_application_1/src/utils/constants.dart';
 import 'package:flutter_application_1/supabase_auth_ui.dart';
 
 /// UI component to create a phone + password signin/ signup form

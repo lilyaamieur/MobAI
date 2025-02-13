@@ -8,8 +8,8 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
-import 'package:flutter_application_1/localizations/supa_socials_auth_localization.dart';
-import 'package:flutter_application_1/utils/constants.dart';
+import 'package:flutter_application_1/src/localizations/supa_socials_auth_localization.dart';
+import 'package:flutter_application_1/src/utils/constants.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 extension on OAuthProvider {

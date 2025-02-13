@@ -1,37 +1,27 @@
+import 'package:flutter_application_1/phone_sign_up.dart';
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:flutter_application_1/views/screens/authentication/sign_in.dart';
 import 'package:flutter_application_1/supabase_auth_ui.dart';
-import 'package:flutter_application_1/views/screens/authentication/home.dart';
-import 'package:flutter_application_1/views/screens/authentication/magic_link.dart';
-import 'package:flutter_application_1/views/screens/authentication/update_password.dart';
-import 'package:flutter_application_1/views/screens/authentication/phone_sign_in.dart';
-import 'package:flutter_application_1/views/screens/authentication/phone_sign_up.dart';
-import 'package:flutter_application_1/views/screens/authentication/verify_phone.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 
+import './home.dart';
+import './sign_in.dart';
+import './magic_link.dart';
+import './update_password.dart';
+import 'phone_sign_in.dart';
+import './verify_phone.dart';
 
 void main() async {
-  try {
-    print("loading dotenv ...");
-    await dotenv.load(fileName: ".env");
-    print("dotenv loaded!");
-    print("initializing supabase ...");
-    await Supabase.initialize(
-        url: dotenv.env['SUPABASE_URL']!,
-        anonKey: dotenv.env['SUPABASE_ANON_KEY']!);
-  }
-  catch (e) {
-    print("Error loading dotenv: $e");
-  }
+  WidgetsFlutterBinding.ensureInitialized();
 
-  runApp(const MainApp());
+  /// TODO: replace with your credentials
+  await Supabase.initialize(
+    url: 'https://yoursupabaseurl.supabase.co',
+    anonKey: 'your_anon_key',
+  );
+  runApp(const MyApp());
 }
 
-
-
-class MainApp extends StatelessWidget {
-  const MainApp({Key? key}) : super(key: key);
+class MyApp extends StatelessWidget {
+  const MyApp({Key? key}) : super(key: key);
 
   // This widget is the root of your application.
   @override

@@ -1,7 +1,7 @@
 import 'package:email_validator/email_validator.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_application_1/localizations/supa_email_auth_localization.dart';
-import 'package:flutter_application_1/utils/constants.dart';
+import 'package:flutter_application_1/src/localizations/supa_email_auth_localization.dart';
+import 'package:flutter_application_1/src/utils/constants.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// {@template metadata_field}
@@ -457,17 +457,6 @@ class _SupaEmailAuthState extends State<SupaEmailAuth> {
                           spacer(16),
                         ])
                     .expand((element) => element),
-              spacer(16),
-              if (_isSigningIn) ...[
-                TextButton(
-                  onPressed: () {
-                    setState(() {
-                      _isRecoveringPassword = true;
-                    });
-                    widget.onToggleRecoverPassword?.call(_isRecoveringPassword);
-                  },
-                  child: Text(localization.forgotPassword),
-                ),
               ElevatedButton(
                 onPressed: _signInSignUp,
                 child: (_isLoading)
@@ -483,7 +472,17 @@ class _SupaEmailAuthState extends State<SupaEmailAuth> {
                         ? localization.signIn
                         : localization.signUp),
               ),
-             
+              spacer(16),
+              if (_isSigningIn) ...[
+                TextButton(
+                  onPressed: () {
+                    setState(() {
+                      _isRecoveringPassword = true;
+                    });
+                    widget.onToggleRecoverPassword?.call(_isRecoveringPassword);
+                  },
+                  child: Text(localization.forgotPassword),
+                ),
               ],
               TextButton(
                 key: const ValueKey('toggleSignInButton'),
