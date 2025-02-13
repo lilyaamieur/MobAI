@@ -1,6 +1,7 @@
 import 'package:flutter_application_1/phone_sign_up.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/supabase_auth_ui.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import './home.dart';
 import './sign_in.dart';
@@ -12,11 +13,16 @@ import './verify_phone.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  /// TODO: replace with your credentials
-  await Supabase.initialize(
-    url: 'https://yoursupabaseurl.supabase.co',
-    anonKey: 'your_anon_key',
-  );
+  try {  
+    await dotenv.load(fileName: ".env");
+    await Supabase.initialize(
+    url: dotenv.env['SUPABASE_URL']!,
+    anonKey: dotenv.env['SUPABASE_ANON_KEY']!,
+    );
+  }
+  catch (e) {
+    print('Error initializing Supabase: $e');
+  }
   runApp(const MyApp());
 }
 
