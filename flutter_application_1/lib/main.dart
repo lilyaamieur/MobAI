@@ -4,7 +4,10 @@ import 'package:flutter_application_1/upload_page.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 void main() async {
-  await dotenv.load(fileName: '.env');
+  print("loading dotenv ...");
+  await dotenv.load(fileName: ".env");
+  print("dotenv loaded!");
+  print("initializing supabase ...");
   await Supabase.initialize(
     url: dotenv.env['SUPABASE_URL']!,
     anonKey: dotenv.env['SUPABASE_ANON_KEY']!,
