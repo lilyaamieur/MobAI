@@ -1,9 +1,10 @@
+import 'package:flutter_application_1/auth/auth_wrapper.dart';
 import 'package:flutter_application_1/phone_sign_up.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/supabase_auth_ui.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-import './home.dart';
+//import './home.dart';
 import './sign_in.dart';
 import './magic_link.dart';
 import './update_password.dart';
@@ -48,7 +49,7 @@ class MyApp extends StatelessWidget {
         '/phone_sign_in': (context) => const PhoneSignIn(),
         '/phone_sign_up': (context) => const PhoneSignUp(),
         '/verify_phone': (context) => const VerifyPhone(),
-        '/home': (context) => const Home(),
+        '/home': (context) => AuthWrapper()
       },
       onUnknownRoute: (RouteSettings settings) {
         return MaterialPageRoute<void>(

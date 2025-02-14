@@ -1,33 +1,45 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_application_1/supabase_auth_ui.dart';
+import 'package:flutter_application_1/drawing/online_mode.dart';
+import 'package:flutter_application_1/drawing/drawing_page.dart';
 
-import 'constants.dart';
+class HomeScreen extends StatelessWidget {
+  final String userId;
 
-class Home extends StatelessWidget {
-  const Home({Key? key}) : super(key: key);
+  HomeScreen({required this.userId});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: appBar('Home'),
+      appBar: AppBar(
+        title: Text('AI Guess Drawing Challenge'),
+      ),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Text(
-              'You are home',
-              style: TextStyle(fontSize: 42),
-            ),
             ElevatedButton(
               onPressed: () {
-                Supabase.instance.client.auth.signOut();
-                Navigator.of(context).pushReplacementNamed('/');
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => OnlineModeScreen(userId: userId),
+                  ),
+                );
               },
-              child: const Text(
-                'Log Out',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-            )
+              child: Text('Online Mode'),
+            ),
+            SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => OfflineModeScreen(),
+                  ),
+                );
+              },
+              child: Text('Offline Mode'),
+            ),
           ],
         ),
       ),

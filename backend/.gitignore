@@ -1,0 +1,8 @@
+.env
+*.pyc
+__pycache__/
+.pytest_cache/
+venv/
+*.h5
+.DS_Store
+.vscode/
