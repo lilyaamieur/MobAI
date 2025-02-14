@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_drawing_board/flutter_drawing_board.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -20,10 +19,12 @@ class _OnlineModeState extends State<OnlineMode> {
   String prompt = "Draw a House";
   bool isGameStarted = false;
   Timer? _timer;
-  int timeLeft = 60; // Timer for 1 minute
+  int timeLeft = 60; // 1-minute timer
   bool hasSubmitted = false;
   String? player1Drawing;
   String? player2Drawing;
+  String? player1Id;
+  String? player2Id;
 
   @override
   void initState() {
@@ -37,10 +38,11 @@ class _OnlineModeState extends State<OnlineMode> {
         .from("games")
         .select()
         .eq("status", "waiting")
-        .limit(1);
+        .limit(1)
+        .maybeSingle();
 
-    if (response.isNotEmpty) {
-      gameId = response[0]["id"];
+    if (response != null) {
+      gameId = response["id"];
       await supabase.from("games").update({
         "player2_id": userId,
         "status": "in_progress"
@@ -65,22 +67,24 @@ class _OnlineModeState extends State<OnlineMode> {
         .eq("id", gameId)
         .listen((data) {
       if (data.isNotEmpty) {
+        var gameData = data[0];
+
         setState(() {
-          prompt = data[0]["prompt"];
+          prompt = gameData["prompt"];
+          player1Id = gameData["player1_id"];
+          player2Id = gameData["player2_id"];
+          player1Drawing = gameData["player1_drawing"];
+          player2Drawing = gameData["player2_drawing"];
         });
 
-        // Start timer when both players are in
-        if (data[0]["player2_id"] != null && !isGameStarted) {
+        // Start timer only when both players are in the game
+        if (player1Id != null && player2Id != null && !isGameStarted) {
           startTimer();
         }
 
-        // Get drawings once both are submitted
-        if (data[0]["player1_drawing"] != null &&
-            data[0]["player2_drawing"] != null) {
-          setState(() {
-            player1Drawing = data[0]["player1_drawing"];
-            player2Drawing = data[0]["player2_drawing"];
-          });
+        // If both drawings are submitted, stop the timer
+        if (player1Drawing != null && player2Drawing != null) {
+          _timer?.cancel();
         }
       }
     });
@@ -113,10 +117,7 @@ class _OnlineModeState extends State<OnlineMode> {
     Uint8List uint8List = drawingData!.buffer.asUint8List();
     String base64Image = base64Encode(uint8List);
 
-    var player1Id =
-        await supabase.from("games").select("player1_id").eq("id", gameId);
-
-    if (userId == player1Id[0]["player1_id"]) {
+    if (userId == player1Id) {
       await supabase.from("games").update({
         "player1_drawing": base64Image,
       }).eq("id", gameId);
@@ -125,6 +126,9 @@ class _OnlineModeState extends State<OnlineMode> {
         "player2_drawing": base64Image,
       }).eq("id", gameId);
     }
+
+    // Stop timer when user submits
+    _timer?.cancel();
   }
 
   @override
@@ -139,7 +143,7 @@ class _OnlineModeState extends State<OnlineMode> {
       appBar: AppBar(title: Text("Online Mode: $prompt")),
       body: Column(
         children: [
-          if (!isGameStarted) ...[
+          if (player2Id == null) ...[
             Text("Waiting for another player..."),
           ] else ...[
             Text("Time Left: $timeLeft seconds",
@@ -147,7 +151,11 @@ class _OnlineModeState extends State<OnlineMode> {
             Expanded(
               child: DrawingBoard(
                 controller: _controller,
-                background: Container(color: Colors.white),
+                background: Container(
+                  color: Colors.white,
+                  width: MediaQuery.of(context).size.width,
+                  height: MediaQuery.of(context).size.width, 
+                ),
                 showDefaultActions: true,
                 showDefaultTools: true,
               ),
