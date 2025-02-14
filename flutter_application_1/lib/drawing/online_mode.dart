@@ -18,8 +18,9 @@ class _OnlineModeState extends State<OnlineMode> {
   String userId = "";
   String prompt = "Draw a House";
   bool isGameStarted = false;
-  Timer? _timer;
+  Timer? _gameTimer;
   Timer? _pollingTimer;
+  Timer? _checkSubmissionTimer;
   int timeLeft = 60; // 1-minute timer
   bool hasSubmitted = false;
   String? player1Drawing;
@@ -64,7 +65,7 @@ class _OnlineModeState extends State<OnlineMode> {
   void pollForPlayer2() {
     _pollingTimer = Timer.periodic(Duration(seconds: 2), (timer) async {
       var response = await supabase.from("games").select().eq("id", gameId).single();
-      
+
       if (!mounted) return;
 
       setState(() {
@@ -97,12 +98,14 @@ class _OnlineModeState extends State<OnlineMode> {
           player2Drawing = gameData["player2_drawing"];
         });
 
-        // Stop the timer once both drawings are submitted
+        // Stop the submission check once both drawings are submitted
         if (player1Drawing != null && player2Drawing != null) {
-          _timer?.cancel();
+          _checkSubmissionTimer?.cancel();
         }
       }
     });
+
+    startSubmissionChecker(); // Start checking if both drawings are submitted
   }
 
   void startTimer() {
@@ -110,16 +113,33 @@ class _OnlineModeState extends State<OnlineMode> {
       isGameStarted = true;
     });
 
-    _timer = Timer.periodic(Duration(seconds: 1), (timer) {
+    _gameTimer = Timer.periodic(Duration(seconds: 1), (timer) {
       if (timeLeft > 0) {
         setState(() {
           timeLeft--;
         });
       } else {
-        _timer?.cancel();
+        _gameTimer?.cancel();
         if (!hasSubmitted) {
           submitDrawing();
         }
+      }
+    });
+  }
+
+  void startSubmissionChecker() {
+    _checkSubmissionTimer = Timer.periodic(Duration(seconds: 2), (timer) async {
+      var response = await supabase.from("games").select().eq("id", gameId).single();
+
+      if (!mounted) return;
+
+      setState(() {
+        player1Drawing = response["player1_drawing"];
+        player2Drawing = response["player2_drawing"];
+      });
+
+      if (player1Drawing != null && player2Drawing != null) {
+        timer.cancel(); // Stop checking once both drawings are submitted
       }
     });
   }
@@ -142,13 +162,14 @@ class _OnlineModeState extends State<OnlineMode> {
       }).eq("id", gameId);
     }
 
-    _timer?.cancel();
+    _gameTimer?.cancel();
   }
 
   @override
   void dispose() {
-    _timer?.cancel();
+    _gameTimer?.cancel();
     _pollingTimer?.cancel();
+    _checkSubmissionTimer?.cancel();
     super.dispose();
   }
 
@@ -169,7 +190,7 @@ class _OnlineModeState extends State<OnlineMode> {
                 background: Container(
                   color: Colors.white,
                   width: MediaQuery.of(context).size.width,
-                  height: MediaQuery.of(context).size.width, 
+                  height: MediaQuery.of(context).size.width,  
                 ),
                 showDefaultActions: true,
                 showDefaultTools: true,
