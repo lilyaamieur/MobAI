@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/colors.dart';
 import 'package:flutter_application_1/supabase_auth_ui.dart';
 import 'package:flutter_application_1/views/widgets/navBar.dart';
 
@@ -8,7 +9,7 @@ class Home extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: main_black,
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -17,16 +18,7 @@ class Home extends StatelessWidget {
               'You are home',
               style: TextStyle(fontSize: 42),
             ),
-            ElevatedButton(
-              onPressed: () {
-                Supabase.instance.client.auth.signOut();
-                Navigator.of(context).pushReplacementNamed('/');
-              },
-              child: const Text(
-                'Log Out',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-            ),
+            
           ],
         ),
       ),

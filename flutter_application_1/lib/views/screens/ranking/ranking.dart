@@ -15,7 +15,7 @@ class _RankingState extends State<Ranking> {
     return Scaffold(
       backgroundColor: main_black,
       appBar: AppBar(
-        backgroundColor: Colors.black,
+        backgroundColor: main_black,
         automaticallyImplyLeading: false,  // ✅ Removes the back button
         flexibleSpace: Align(
           alignment: Alignment.center,
