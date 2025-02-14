@@ -1,7 +1,6 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_drawing_board/flutter_drawing_board.dart';
-import 'package:image/image.dart' as img;
 import 'package:tflite/tflite.dart';
 
 class OfflineMode extends StatefulWidget {

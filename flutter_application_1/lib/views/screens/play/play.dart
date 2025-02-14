@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/colors.dart';
-import 'package:flutter_application_1/drawing/offline_mode.dart';
+//import 'package:flutter_application_1/drawing/offline_mode.dart';
 import 'package:flutter_application_1/drawing/online_mode.dart';
 import 'package:flutter_application_1/views/widgets/navBar.dart';
 
