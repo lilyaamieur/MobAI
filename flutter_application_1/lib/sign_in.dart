@@ -33,7 +33,7 @@ class SignUp extends StatelessWidget {
       final userId = response.user?.id ?? '';
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
-          builder: (context) => Account(
+          builder: (context) => SignUp(
           ),
         ),
       );

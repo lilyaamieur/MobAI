@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_application_1/colors.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart'; // Import UUID to generate unique IDs
+import 'package:flutter_application_1/views/widgets/navBar.dart';
+
 
 class Account extends StatefulWidget {
   const Account({Key? key}) : super(key: key);
@@ -245,6 +247,8 @@ Future<void> updateUserData() async {
           ],
         ),
       ),
+      bottomNavigationBar: const BottomNavBar(currentIndex: 0),
+
     );
   }
 }

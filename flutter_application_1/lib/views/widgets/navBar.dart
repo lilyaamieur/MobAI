@@ -21,7 +21,7 @@ class BottomNavBar extends StatelessWidget {
         nextScreen = Play();
         break;
       case 1:
-        nextScreen = Ranking();
+        nextScreen = FriendsScreen();
         break;
       case 2:
         nextScreen = Account();
