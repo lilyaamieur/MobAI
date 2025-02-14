@@ -77,7 +77,10 @@ class _OnlineModeState extends State<OnlineMode> {
     Uint8List uint8List = drawingData.buffer.asUint8List();
     String base64Image = base64Encode(uint8List);
     print("image : " + base64Image.length.toString());
-    if (userId == "player1_id") {
+
+    final player1_id = await supabase.from("games").select("player1_id").eq("id", gameId);
+
+    if (userId == player1_id[0]["player1_id"]) {
       await supabase.from("games").update({
         "player1_drawing": base64Image,
       }).eq("id", gameId);
