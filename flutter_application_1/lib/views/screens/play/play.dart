@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/colors.dart';
+import 'package:flutter_application_1/drawing/offline_mode.dart';
 //import 'package:flutter_application_1/drawing/offline_mode.dart';
 import 'package:flutter_application_1/drawing/online_mode.dart';
 import 'package:flutter_application_1/views/widgets/navBar.dart';
@@ -61,7 +62,7 @@ class _PlayState extends State<Play> {
       width: 250, // Ensures all buttons have the same width
       child: ElevatedButton(
         onPressed: () {
-          Navigator.push(context, MaterialPageRoute(builder: (context) => OnlineMode()));
+          Navigator.push(context, MaterialPageRoute(builder: (context) => OfflineMode()));
         },
         style: ElevatedButton.styleFrom(
           backgroundColor: main_green,
