@@ -23,7 +23,7 @@ class AppRoutes {
       case account:
         return MaterialPageRoute(builder: (_) => Account());
       case ranking:
-        return MaterialPageRoute(builder: (_) => Ranking());
+        return MaterialPageRoute(builder: (_) => FriendsScreen());
       default:
         return MaterialPageRoute(
           builder: (_) => Scaffold(

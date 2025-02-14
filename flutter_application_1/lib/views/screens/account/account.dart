@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/colors.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:uuid/uuid.dart'; // Import UUID to generate unique IDs
+import 'package:uuid/uuid.dart';
+import 'package:flutter_application_1/views/widgets/navBar.dart';
+import 'package:image_picker/image_picker.dart'; // For profile picture updates
 
 class Account extends StatefulWidget {
   const Account({Key? key}) : super(key: key);
@@ -12,12 +14,11 @@ class Account extends StatefulWidget {
 
 class _AccountState extends State<Account> {
   final SupabaseClient supabase = Supabase.instance.client;
-  final Uuid uuid = Uuid(); // UUID generator for unique IDs
+  final Uuid uuid = Uuid();
 
   TextEditingController usernameController = TextEditingController();
   TextEditingController bioController = TextEditingController();
-
-  String profileImage = 'lib/images/douda.png'; // Default profile picture
+  String profileImage = 'lib/images/douda.png';
 
   @override
   void initState() {
@@ -36,10 +37,9 @@ class _AccountState extends State<Account> {
           .from('Account')
           .select('id, user_name, bio')
           .eq('email', userEmail.toString())
-          .maybeSingle(); // Avoids crashes if no account is found
+          .maybeSingle();
 
       if (accountResponse == null) {
-        // ✅ If no account exists, create a new one
         final newAccountId = uuid.v4();
         await supabase.from('Account').insert({
           'id': newAccountId,
@@ -47,12 +47,9 @@ class _AccountState extends State<Account> {
           'email': userEmail,
           'bio': "Hello, I'm new here!",
         });
-        print("New account created.");
       } else {
-        // ✅ If account exists, update UI with the data
         setState(() {
-          usernameController.text =
-              accountResponse['user_name'] ?? "Undetermined";
+          usernameController.text = accountResponse['user_name'] ?? "Undetermined";
           bioController.text = accountResponse['bio'] ?? "Undetermined";
         });
       }
@@ -61,53 +58,54 @@ class _AccountState extends State<Account> {
     }
   }
 
-Future<void> updateUserData() async {
-  try {
-    final user = supabase.auth.currentUser;
-    if (user == null) return;
+  Future<void> updateUserData() async {
+    try {
+      final user = supabase.auth.currentUser;
+      if (user == null) return;
 
-    // ✅ First, check if the user exists in the database
-    final existingUser = await supabase
-        .from('Account')
-        .select('id')
-        .eq('email', user.email.toString())
-        .maybeSingle();
+      final existingUser = await supabase
+          .from('Account')
+          .select('id')
+          .eq('email', user.email.toString())
+          .maybeSingle();
 
-    if (existingUser == null) {
-      // ✅ If user doesn't exist, insert a new account
-      await supabase.from('Account').insert({
-        'id': uuid.v4(), // Generates a unique ID
-        'email': user.email,
-        'user_name': usernameController.text.isNotEmpty
-            ? usernameController.text
-            : "New User",
-        'bio': bioController.text.isNotEmpty
-            ? bioController.text
-            : "Hello, I'm new here!",
-      });
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("New account created successfully!")),
-      );
-    } else {
-      // ✅ If user exists, update their profile data
-      await supabase.from('Account').update({
-        'user_name': usernameController.text,
-        'bio': bioController.text,
-      }).eq('email', user.email.toString());
+      if (existingUser == null) {
+        await supabase.from('Account').insert({
+          'id': uuid.v4(),
+          'email': user.email,
+          'user_name': usernameController.text.isNotEmpty ? usernameController.text : "New User",
+          'bio': bioController.text.isNotEmpty ? bioController.text : "Hello, I'm new here!",
+        });
+      } else {
+        await supabase.from('Account').update({
+          'user_name': usernameController.text,
+          'bio': bioController.text,
+        }).eq('email', user.email.toString());
+      }
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Profile updated successfully!")),
+        SnackBar(
+          content: Text("Profile updated successfully!"),
+          backgroundColor: Colors.green,
+        ),
       );
+    } catch (e) {
+      print("Error updating user data: $e");
     }
-  } catch (e) {
-    print("Error updating user data: $e");
   }
-}
 
   void logout() {
     supabase.auth.signOut();
     Navigator.of(context).pushReplacementNamed('/');
+  }
+
+  Future<void> pickImage() async {
+    final pickedFile = await ImagePicker().pickImage(source: ImageSource.gallery);
+    if (pickedFile != null) {
+      setState(() {
+        profileImage = pickedFile.path;
+      });
+    }
   }
 
   @override
@@ -116,133 +114,103 @@ Future<void> updateUserData() async {
       backgroundColor: main_black,
       appBar: AppBar(
         backgroundColor: main_black,
-        automaticallyImplyLeading: true,
         centerTitle: true,
         title: Text(
           "Account",
-          style: TextStyle(
-              fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white),
+          style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white),
         ),
       ),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            const SizedBox(height: 40),
+            const SizedBox(height: 30),
 
-            // ✅ Profile Picture with Edit Button
-            Stack(
-              alignment: Alignment.bottomRight,
-              children: [
-                CircleAvatar(
-                  radius: 50,
-                  backgroundImage: NetworkImage(profileImage),
-                  onBackgroundImageError: (_, __) =>
-                      AssetImage('lib/images/douda.png'),
-                ),
-                Positioned(
-                  bottom: 0,
-                  right: 0,
-                  child: Container(
-                    padding: EdgeInsets.all(5),
-                    decoration: BoxDecoration(
-                      color: Colors.green,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(Icons.edit, color: Colors.white, size: 20),
+            // Profile Picture
+            GestureDetector(
+              onTap: pickImage,
+              child: Stack(
+                alignment: Alignment.bottomRight,
+                children: [
+                  CircleAvatar(
+                    radius: 55,
+                    backgroundImage: AssetImage(profileImage),
                   ),
-                ),
-              ],
+                  Container(
+                    padding: EdgeInsets.all(6),
+                    decoration: BoxDecoration(color: main_green, shape: BoxShape.circle),
+                    child: Icon(Icons.edit, color: Colors.white, size: 22),
+                  ),
+                ],
+              ),
             ),
 
             const SizedBox(height: 20),
 
-            // ✅ Name Input Field
-            TextField(
-              controller: usernameController,
-              style: TextStyle(color: Colors.white),
-              decoration: InputDecoration(
-                hintText: "Username",
-                hintStyle: TextStyle(color: Colors.white70),
-                enabledBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Colors.green),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Colors.green, width: 2),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
-            ),
+            // Username Input
+            buildInputField("Username", usernameController),
 
             const SizedBox(height: 15),
 
-            // ✅ Bio Input Field
-            TextField(
-              controller: bioController,
-              maxLines: 3,
-              style: TextStyle(color: Colors.white),
-              decoration: InputDecoration(
-                hintText: "Bio",
-                hintStyle: TextStyle(color: Colors.white70),
-                enabledBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Colors.green),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Colors.green, width: 2),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
-            ),
+            // Bio Input
+            buildInputField("Bio", bioController, maxLines: 3),
 
             const SizedBox(height: 30),
 
-            // ✅ Save Button
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: updateUserData,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green,
-                  padding: EdgeInsets.symmetric(vertical: 15),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(30)),
-                ),
-                child: Text(
-                  "Save",
-                  style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white),
-                ),
-              ),
-            ),
+            // Save Button
+            buildActionButton("Save", updateUserData, Colors.green),
+
+            const SizedBox(height: 20),
+
+            // Logout Button
+            buildActionButton("Logout", logout, Colors.red),
 
             const SizedBox(height: 30),
-
-            // ✅ Logout Button
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: logout,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red,
-                  padding: EdgeInsets.symmetric(vertical: 15),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(30)),
-                ),
-                child: Text(
-                  "Logout",
-                  style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white),
-                ),
-              ),
-            ),
           ],
+        ),
+      ),
+      bottomNavigationBar: const BottomNavBar(currentIndex: 0),
+    );
+  }
+
+  // Custom Input Field Widget
+  Widget buildInputField(String hint, TextEditingController controller, {int maxLines = 1}) {
+    return TextField(
+      controller: controller,
+      maxLines: maxLines,
+      style: TextStyle(color: Colors.white),
+      decoration: InputDecoration(
+        hintText: hint,
+        hintStyle: TextStyle(color: Colors.white70),
+        filled: true,
+        fillColor: Colors.black54,
+        enabledBorder: OutlineInputBorder(
+          borderSide: BorderSide(color: Colors.green),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderSide: BorderSide(color: Colors.green, width: 2),
+          borderRadius: BorderRadius.circular(12),
+        ),
+      ),
+    );
+  }
+
+  // Custom Action Button Widget
+  Widget buildActionButton(String text, VoidCallback onPressed, Color color) {
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton(
+        onPressed: onPressed,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: color,
+          padding: EdgeInsets.symmetric(vertical: 15),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+        ),
+        child: Text(
+          text,
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
         ),
       ),
     );
