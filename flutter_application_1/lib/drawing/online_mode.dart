@@ -19,6 +19,7 @@ class _OnlineModeState extends State<OnlineMode> {
   String prompt = "Draw a House";
   bool isGameStarted = false;
   Timer? _timer;
+  Timer? _pollingTimer;
   int timeLeft = 60; // 1-minute timer
   bool hasSubmitted = false;
   String? player1Drawing;
@@ -57,7 +58,23 @@ class _OnlineModeState extends State<OnlineMode> {
       });
     }
 
-    listenToGameUpdates();
+    pollForPlayer2(); // Start polling until second player joins
+  }
+
+  void pollForPlayer2() {
+    _pollingTimer = Timer.periodic(Duration(seconds: 2), (timer) async {
+      var response = await supabase.from("games").select().eq("id", gameId).single();
+      setState(() {
+        player1Id = response["player1_id"];
+        player2Id = response["player2_id"];
+      });
+
+      if (player1Id != null && player2Id != null) {
+        timer.cancel(); // Stop polling when player 2 joins
+        listenToGameUpdates();
+        startTimer();
+      }
+    });
   }
 
   void listenToGameUpdates() {
@@ -71,18 +88,10 @@ class _OnlineModeState extends State<OnlineMode> {
 
         setState(() {
           prompt = gameData["prompt"];
-          player1Id = gameData["player1_id"];
-          player2Id = gameData["player2_id"];
           player1Drawing = gameData["player1_drawing"];
           player2Drawing = gameData["player2_drawing"];
         });
 
-        // Start timer only when both players are in the game
-        if (player1Id != null && player2Id != null && !isGameStarted) {
-          startTimer();
-        }
-
-        // If both drawings are submitted, stop the timer
         if (player1Drawing != null && player2Drawing != null) {
           _timer?.cancel();
         }
@@ -103,7 +112,7 @@ class _OnlineModeState extends State<OnlineMode> {
       } else {
         _timer?.cancel();
         if (!hasSubmitted) {
-          submitDrawing(); // Auto-submit when time runs out
+          submitDrawing();
         }
       }
     });
@@ -127,13 +136,13 @@ class _OnlineModeState extends State<OnlineMode> {
       }).eq("id", gameId);
     }
 
-    // Stop timer when user submits
     _timer?.cancel();
   }
 
   @override
   void dispose() {
     _timer?.cancel();
+    _pollingTimer?.cancel();
     super.dispose();
   }
 
@@ -154,7 +163,7 @@ class _OnlineModeState extends State<OnlineMode> {
                 background: Container(
                   color: Colors.white,
                   width: MediaQuery.of(context).size.width,
-                  height: MediaQuery.of(context).size.width, 
+                  height: MediaQuery.of(context).size.width,
                 ),
                 showDefaultActions: true,
                 showDefaultTools: true,
