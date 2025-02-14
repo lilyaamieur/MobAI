@@ -178,14 +178,26 @@ class _OnlineModeState extends State<OnlineMode> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: main_black,
-      appBar: AppBar(title: Text("Online Mode: $prompt",style: TextStyle(color: Colors.white),),backgroundColor: main_black,),
+      appBar: AppBar(
+          leading: IconButton(
+            icon: Icon(Icons.arrow_back, color: Colors.white), // Custom white back icon
+            onPressed: () {
+              Navigator.pop(context);
+            },
+          ),
+        centerTitle: true,
+        title: Text("Offline Mode: Draw Something!", 
+        style: TextStyle(color: Colors.white),
+          
+        ),
+        backgroundColor: main_black,),
       body: Column(
         children: [
           if (player2Id == null) ...[
             Text("Waiting for another player...", style: TextStyle(color: Colors.white),),
           ] else ...[
             Text("Time Left: $timeLeft seconds",
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white)),
             Expanded(
               child: DrawingBoard(
                 controller: _controller,
@@ -198,12 +210,14 @@ class _OnlineModeState extends State<OnlineMode> {
                 showDefaultTools: true,
               ),
             ),
+            SizedBox(height: 50,),
             ElevatedButton(
               onPressed: submitDrawing,
-            
+              style: ButtonStyle(
+                backgroundColor:  MaterialStateProperty.all<Color>(Colors.green),
+                foregroundColor: MaterialStateProperty.all<Color>(Colors.white), 
+              ),            
               child: Text(hasSubmitted ? "Submitted!" : "Submit Drawing",
-              style: TextStyle(color: Colors.black),
-              
               ),
             ),
           ],

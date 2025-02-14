@@ -43,11 +43,11 @@ class _PlayState extends State<Play> {
           Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              _buildButton("Start Game", () => print("Start Game Pressed")),
+              _buildButton("Online Game", () => print("Online Game Pressed")),
               SizedBox(height: 20), // Space between buttons
-              _buildButton("Leaderboard", () => print("Leaderboard Pressed")),
+              _buildButton("Offlineline Game", () => print("offline Game Pressed")),
               SizedBox(height: 20),
-              _buildButton("Settings", () => print("Settings Pressed")),
+              _buildButton("Join Loby", () => print("Join Loby")),
             ],
           ),
         ],
@@ -62,7 +62,7 @@ class _PlayState extends State<Play> {
       width: 250, // Ensures all buttons have the same width
       child: ElevatedButton(
         onPressed: () {
-          Navigator.push(context, MaterialPageRoute(builder: (context) => OfflineMode()));
+          Navigator.push(context, MaterialPageRoute(builder: (context) => OnlineMode()));
         },
         style: ElevatedButton.styleFrom(
           backgroundColor: main_green,

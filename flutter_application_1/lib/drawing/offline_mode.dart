@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/colors.dart';
 import 'package:flutter_drawing_board/flutter_drawing_board.dart';
 
 class OfflineMode extends StatefulWidget {
@@ -63,11 +64,30 @@ class _OfflineModeState extends State<OfflineMode> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Offline Mode: Draw Something!")),
+      backgroundColor: main_black,
+      
+      appBar: AppBar(
+          leading: IconButton(
+            icon: Icon(Icons.arrow_back, color: Colors.white), // Custom white back icon
+            onPressed: () {
+              Navigator.pop(context);
+            },
+          ),
+        centerTitle: true,
+        title: Text("Offline Mode: Draw Something!", 
+        style: TextStyle(color: Colors.white),
+          
+        ),
+        backgroundColor: main_black,),
       body: Column(
         children: [
+          SizedBox(height: 50,),
+
           Text("Time Left: $timeLeft seconds",
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white)),
+
+          SizedBox(height: 50,),
+
           Expanded(
             child: DrawingBoard(
               controller: _controller,
@@ -76,20 +96,26 @@ class _OfflineModeState extends State<OfflineMode> {
                 width: MediaQuery.of(context).size.width,
                 height: MediaQuery.of(context).size.width,
               ),
-              showDefaultActions: true,
+              showDefaultActions: false,
               showDefaultTools: true,
             ),
           ),
+
+          SizedBox(height: 50,),
           ElevatedButton(
             onPressed: submitDrawing,
-            child: Text(hasSubmitted ? "Submitted!" : "Submit Drawing"),
+              style: ButtonStyle(
+                backgroundColor:  MaterialStateProperty.all<Color>(Colors.green),
+                foregroundColor: MaterialStateProperty.all<Color>(Colors.white), 
+              ),            
+              child: Text(hasSubmitted ? "Submitted!" : "Submit Drawing"),
           ),
           if (hasSubmitted) ...[
             SizedBox(height: 20),
-            Text("Game Over!", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+            Text("Game Over!", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white)),
             if (drawingImage != null)
               Image.memory(base64Decode(drawingImage!), width: 100, height: 100),
-            Text("AI Score: $aiScore", style: TextStyle(fontSize: 20)),
+            Text("AI Score: $aiScore", style: TextStyle(fontSize: 20, color: Colors.white)),
           ],
         ],
       ),
