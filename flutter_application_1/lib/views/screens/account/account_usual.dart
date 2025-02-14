@@ -34,7 +34,7 @@ class _AccountState extends State<Account> {
 
       final accountResponse = await supabase
           .from('Account')
-          .select('id, user_name, bio') 
+          .select('id, user_name, bio')
           .eq('email', userEmail.toString())
           .maybeSingle(); // Avoids crashes if no account is found
 
@@ -42,19 +42,18 @@ class _AccountState extends State<Account> {
         // ✅ If no account exists, create a new one
         final newAccountId = uuid.v4();
         await supabase.from('Account').insert({
-          'id': newAccountId, 
-          'user_name': "New User", 
+          'id': newAccountId,
+          'user_name': "New User",
           'email': userEmail,
-          'bio': "Hello, I'm new here!", 
+          'bio': "Hello, I'm new here!",
         });
         print("New account created.");
       } else {
         // ✅ If account exists, update UI with the data
         setState(() {
-          usernameController.text = accountResponse['user_name'] ?? "Undetermined";
+          usernameController.text =
+              accountResponse['user_name'] ?? "Undetermined";
           bioController.text = accountResponse['bio'] ?? "Undetermined";
-
-
         });
       }
     } catch (e) {
@@ -67,20 +66,44 @@ Future<void> updateUserData() async {
     final user = supabase.auth.currentUser;
     if (user == null) return;
 
-    await supabase.from('Account').update({
-      'user_name': usernameController.text,
-      'bio': bioController.text,
-    }).eq('email', user.email.toString());
+    // ✅ First, check if the user exists in the database
+    final existingUser = await supabase
+        .from('Account')
+        .select('id')
+        .eq('email', user.email.toString())
+        .maybeSingle();
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text("Profile updated successfully!")),
-    );
+    if (existingUser == null) {
+      // ✅ If user doesn't exist, insert a new account
+      await supabase.from('Account').insert({
+        'id': uuid.v4(), // Generates a unique ID
+        'email': user.email,
+        'user_name': usernameController.text.isNotEmpty
+            ? usernameController.text
+            : "New User",
+        'bio': bioController.text.isNotEmpty
+            ? bioController.text
+            : "Hello, I'm new here!",
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("New account created successfully!")),
+      );
+    } else {
+      // ✅ If user exists, update their profile data
+      await supabase.from('Account').update({
+        'user_name': usernameController.text,
+        'bio': bioController.text,
+      }).eq('email', user.email.toString());
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Profile updated successfully!")),
+      );
+    }
   } catch (e) {
     print("Error updating user data: $e");
   }
 }
-
-
 
   void logout() {
     supabase.auth.signOut();
@@ -115,7 +138,8 @@ Future<void> updateUserData() async {
                 CircleAvatar(
                   radius: 50,
                   backgroundImage: NetworkImage(profileImage),
-                  onBackgroundImageError: (_, __) => AssetImage('lib/images/douda.png'),
+                  onBackgroundImageError: (_, __) =>
+                      AssetImage('lib/images/douda.png'),
                 ),
                 Positioned(
                   bottom: 0,

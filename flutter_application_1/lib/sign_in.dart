@@ -1,9 +1,13 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/home.dart';
 import 'package:flutter_application_1/supabase_auth_ui.dart';
 import 'package:flutter_application_1/colors.dart';
 import 'constants.dart';
+import 'package:flutter_application_1/home.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:flutter_application_1/views/screens/account/account.dart';
 
 class SignUp extends StatelessWidget {
   const SignUp({Key? key}) : super(key: key);
@@ -11,10 +15,32 @@ class SignUp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
+  
 
-    void navigateHome(AuthResponse response) {
-      Navigator.of(context).pushReplacementNamed('/home');
+  void navigateToMainScreen2(AuthResponse response) {
+      final userId = response.user?.id ?? '';
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (context) => Home(
+          ),
+        ),
+      );
     }
+
+
+  
+  void navigateToMainScreen1(AuthResponse response) {
+      final userId = response.user?.id ?? '';
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (context) => Account(
+          ),
+        ),
+      );
+    }
+
+
+
 
     final darkModeThemeData = ThemeData.dark().copyWith(
       colorScheme: const ColorScheme.dark(
@@ -136,8 +162,8 @@ class SignUp extends StatelessWidget {
                   data: darkModeThemeData,
                   child: SupaEmailAuth(
                     redirectTo: kIsWeb ? null : 'io.supabase.flutter://',
-                    onSignInComplete: navigateHome,
-                    onSignUpComplete: navigateHome,
+                    onSignInComplete: navigateToMainScreen2,
+                    onSignUpComplete: navigateToMainScreen1,
                     prefixIconEmail: null,
                     prefixIconPassword: null,
                     localization: const SupaEmailAuthLocalization(

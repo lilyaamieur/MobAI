@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_application_1/colors.dart';
 import 'package:flutter_application_1/views/screens/play/play.dart';
 import 'package:flutter_application_1/views/screens/ranking/ranking.dart';
-import 'package:flutter_application_1/views/screens/account/account.dart';
+import 'package:flutter_application_1/views/screens/account/account_usual.dart';
+
 
 class BottomNavBar extends StatelessWidget {
   final int currentIndex;
