@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/colors.dart';
+import 'package:flutter_application_1/drawing/offline_mode.dart';
+import 'package:flutter_application_1/drawing/online_mode.dart';
 import 'package:flutter_application_1/views/widgets/navBar.dart';
 
 class Play extends StatefulWidget {
@@ -58,7 +60,9 @@ class _PlayState extends State<Play> {
     return SizedBox(
       width: 250, // Ensures all buttons have the same width
       child: ElevatedButton(
-        onPressed: onPressed,
+        onPressed: () {
+          Navigator.push(context, MaterialPageRoute(builder: (context) => OnlineMode()));
+        },
         style: ElevatedButton.styleFrom(
           backgroundColor: main_green,
           foregroundColor: Colors.white,
