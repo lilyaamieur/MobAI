@@ -62,7 +62,7 @@ class _PlayState extends State<Play> {
       width: 250, // Ensures all buttons have the same width
       child: ElevatedButton(
         onPressed: () {
-          Navigator.push(context, MaterialPageRoute(builder: (context) => OfflineMode()));
+          Navigator.push(context, MaterialPageRoute(builder: (context) => OnlineMode()));
         },
         style: ElevatedButton.styleFrom(
           backgroundColor: main_green,
