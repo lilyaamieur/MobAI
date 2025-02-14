@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/colors.dart';
 import 'package:flutter_drawing_board/flutter_drawing_board.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
@@ -176,11 +177,12 @@ class _OnlineModeState extends State<OnlineMode> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Online Mode: $prompt")),
+      backgroundColor: main_black,
+      appBar: AppBar(title: Text("Online Mode: $prompt",style: TextStyle(color: Colors.white),),backgroundColor: main_black,),
       body: Column(
         children: [
           if (player2Id == null) ...[
-            Text("Waiting for another player..."),
+            Text("Waiting for another player...", style: TextStyle(color: Colors.white),),
           ] else ...[
             Text("Time Left: $timeLeft seconds",
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
@@ -198,7 +200,11 @@ class _OnlineModeState extends State<OnlineMode> {
             ),
             ElevatedButton(
               onPressed: submitDrawing,
-              child: Text(hasSubmitted ? "Submitted!" : "Submit Drawing"),
+            
+              child: Text(hasSubmitted ? "Submitted!" : "Submit Drawing",
+              style: TextStyle(color: Colors.black),
+              
+              ),
             ),
           ],
           if (player1Drawing != null && player2Drawing != null) ...[
@@ -209,18 +215,18 @@ class _OnlineModeState extends State<OnlineMode> {
               children: [
                 Column(
                   children: [
-                    Text("Player 1"),
+                    Text("Player 1", style: TextStyle(color: Colors.white),),
                     Image.memory(base64Decode(player1Drawing!),
                         width: 100, height: 100),
-                    Text("Score: 75"),
+                    Text("Score: 75", style: TextStyle(color: Colors.white),),
                   ],
                 ),
                 Column(
                   children: [
-                    Text("Player 2"),
+                    Text("Player 2", style: TextStyle(color: Colors.white),),
                     Image.memory(base64Decode(player2Drawing!),
                         width: 100, height: 100),
-                    Text("Score: 80"),
+                    Text("Score: 80", style: TextStyle(color: Colors.white),),
                   ],
                 ),
               ],
