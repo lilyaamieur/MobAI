@@ -58,19 +58,22 @@ class _OnlineModeState extends State<OnlineMode> {
       });
     }
 
-    pollForPlayer2(); // Start polling until second player joins
+    pollForPlayer2(); // Start polling until the second player joins
   }
 
   void pollForPlayer2() {
     _pollingTimer = Timer.periodic(Duration(seconds: 2), (timer) async {
       var response = await supabase.from("games").select().eq("id", gameId).single();
+      
+      if (!mounted) return;
+
       setState(() {
         player1Id = response["player1_id"];
         player2Id = response["player2_id"];
       });
 
       if (player1Id != null && player2Id != null) {
-        timer.cancel(); // Stop polling when player 2 joins
+        timer.cancel(); // Stop polling when the second player joins
         listenToGameUpdates();
         startTimer();
       }
@@ -86,12 +89,15 @@ class _OnlineModeState extends State<OnlineMode> {
       if (data.isNotEmpty) {
         var gameData = data[0];
 
+        if (!mounted) return;
+
         setState(() {
           prompt = gameData["prompt"];
           player1Drawing = gameData["player1_drawing"];
           player2Drawing = gameData["player2_drawing"];
         });
 
+        // Stop the timer once both drawings are submitted
         if (player1Drawing != null && player2Drawing != null) {
           _timer?.cancel();
         }
@@ -163,7 +169,7 @@ class _OnlineModeState extends State<OnlineMode> {
                 background: Container(
                   color: Colors.white,
                   width: MediaQuery.of(context).size.width,
-                  height: MediaQuery.of(context).size.width,
+                  height: MediaQuery.of(context).size.width, 
                 ),
                 showDefaultActions: true,
                 showDefaultTools: true,
