@@ -12,6 +12,7 @@ dependencies:
   supabase_flutter: ^2.5.4  # Check for the latest version
   image_picker: ^1.0.7 
   flutter_dotenv: ^5.0.2
+  flutter_drawing_board: ^0.9.5
 
 dev_dependencies:  
   font_awesome_flutter: ^10.7.0
@@ -26,3 +27,4 @@ flutter:
   uses-material-design: true
   assets:
     - .env
+    - lib/images/play.png
