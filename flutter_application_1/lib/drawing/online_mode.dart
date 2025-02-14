@@ -1,9 +1,10 @@
-import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:flutter_drawing_board/flutter_drawing_board.dart';
+import 'dart:async';
 import 'dart:convert';
+import 'dart:typed_data';
 
+import 'package:flutter/material.dart';
+import 'package:flutter_drawing_board/flutter_drawing_board.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 
 class OnlineMode extends StatefulWidget {
@@ -15,8 +16,14 @@ class _OnlineModeState extends State<OnlineMode> {
   final DrawingController _controller = DrawingController();
   final SupabaseClient supabase = Supabase.instance.client;
   String gameId = "";
-  String userId = ""; // Example, fetch from auth
+  String userId = "";
   String prompt = "Draw a House";
+  bool isGameStarted = false;
+  Timer? _timer;
+  int timeLeft = 60; // Timer for 1 minute
+  bool hasSubmitted = false;
+  String? player1Drawing;
+  String? player2Drawing;
 
   @override
   void initState() {
@@ -26,22 +33,19 @@ class _OnlineModeState extends State<OnlineMode> {
   }
 
   Future<void> findOrCreateGame() async {
-    var response =
-        await supabase.from("games").select().eq("status", "waiting").limit(1);
+    var response = await supabase
+        .from("games")
+        .select()
+        .eq("status", "waiting")
+        .limit(1);
 
     if (response.isNotEmpty) {
-      print(response);
       gameId = response[0]["id"];
-      print("game id: $gameId");
-      var response3 = await supabase.from("games").select().eq("id", gameId);
-      print("respnse 3: $response3");
-      print("user id: $userId");
-
-      final response2 = await supabase.from("games").update(
-          {"player2_id": userId, "status": "in_progress"}).eq("id", gameId);
-      print("response 2 : " + response2);
+      await supabase.from("games").update({
+        "player2_id": userId,
+        "status": "in_progress"
+      }).eq("id", gameId);
     } else {
-      print("Game joined");
       gameId = const Uuid().v4();
       await supabase.from("games").insert({
         "id": gameId,
@@ -55,32 +59,64 @@ class _OnlineModeState extends State<OnlineMode> {
   }
 
   void listenToGameUpdates() {
-    print("changes!!!");
     supabase
         .from("games")
         .stream(primaryKey: ["id"])
         .eq("id", gameId)
         .listen((data) {
-          if (data.isNotEmpty) {
-            print("data : " + data.toString());
-            setState(() {
-              prompt = data[0]["prompt"];
-            });
-          }
+      if (data.isNotEmpty) {
+        setState(() {
+          prompt = data[0]["prompt"];
         });
+
+        // Start timer when both players are in
+        if (data[0]["player2_id"] != null && !isGameStarted) {
+          startTimer();
+        }
+
+        // Get drawings once both are submitted
+        if (data[0]["player1_drawing"] != null &&
+            data[0]["player2_drawing"] != null) {
+          setState(() {
+            player1Drawing = data[0]["player1_drawing"];
+            player2Drawing = data[0]["player2_drawing"];
+          });
+        }
+      }
+    });
+  }
+
+  void startTimer() {
+    setState(() {
+      isGameStarted = true;
+    });
+
+    _timer = Timer.periodic(Duration(seconds: 1), (timer) {
+      if (timeLeft > 0) {
+        setState(() {
+          timeLeft--;
+        });
+      } else {
+        _timer?.cancel();
+        if (!hasSubmitted) {
+          submitDrawing(); // Auto-submit when time runs out
+        }
+      }
+    });
   }
 
   Future<void> submitDrawing() async {
+    if (hasSubmitted) return;
+    setState(() => hasSubmitted = true);
+
     ByteData? drawingData = await _controller.getImageData();
-    if (drawingData == null) return;
-
-    Uint8List uint8List = drawingData.buffer.asUint8List();
+    Uint8List uint8List = drawingData!.buffer.asUint8List();
     String base64Image = base64Encode(uint8List);
-    print("image : " + base64Image.length.toString());
 
-    final player1_id = await supabase.from("games").select("player1_id").eq("id", gameId);
+    var player1Id =
+        await supabase.from("games").select("player1_id").eq("id", gameId);
 
-    if (userId == player1_id[0]["player1_id"]) {
+    if (userId == player1Id[0]["player1_id"]) {
       await supabase.from("games").update({
         "player1_drawing": base64Image,
       }).eq("id", gameId);
@@ -92,27 +128,60 @@ class _OnlineModeState extends State<OnlineMode> {
   }
 
   @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text("Online Mode: $prompt")),
       body: Column(
         children: [
-          Expanded(
-            child: DrawingBoard(
-              controller: _controller,
-              background: Container(
-                color: Colors.white,
-                height: MediaQuery.of(context).size.width,
-                width: MediaQuery.of(context).size.width,
+          if (!isGameStarted) ...[
+            Text("Waiting for another player..."),
+          ] else ...[
+            Text("Time Left: $timeLeft seconds",
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            Expanded(
+              child: DrawingBoard(
+                controller: _controller,
+                background: Container(color: Colors.white),
+                showDefaultActions: true,
+                showDefaultTools: true,
               ),
-              showDefaultActions: true,
-              showDefaultTools: true,
             ),
-          ),
-          ElevatedButton(
-            onPressed: submitDrawing,
-            child: Text("Submit Drawing"),
-          ),
+            ElevatedButton(
+              onPressed: submitDrawing,
+              child: Text(hasSubmitted ? "Submitted!" : "Submit Drawing"),
+            ),
+          ],
+          if (player1Drawing != null && player2Drawing != null) ...[
+            SizedBox(height: 20),
+            Text("Game Over!"),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                Column(
+                  children: [
+                    Text("Player 1"),
+                    Image.memory(base64Decode(player1Drawing!),
+                        width: 100, height: 100),
+                    Text("Score: 75"),
+                  ],
+                ),
+                Column(
+                  children: [
+                    Text("Player 2"),
+                    Image.memory(base64Decode(player2Drawing!),
+                        width: 100, height: 100),
+                    Text("Score: 80"),
+                  ],
+                ),
+              ],
+            ),
+          ]
         ],
       ),
     );
