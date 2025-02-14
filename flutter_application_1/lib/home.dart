@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/colors.dart';
-import 'package:flutter_application_1/supabase_auth_ui.dart';
 import 'package:flutter_application_1/views/widgets/navBar.dart';
 
 class Home extends StatelessWidget {

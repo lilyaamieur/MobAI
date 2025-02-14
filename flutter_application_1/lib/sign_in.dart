@@ -5,9 +5,6 @@ import 'package:flutter_application_1/home.dart';
 import 'package:flutter_application_1/supabase_auth_ui.dart';
 import 'package:flutter_application_1/colors.dart';
 import 'constants.dart';
-import 'package:flutter_application_1/home.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:flutter_application_1/views/screens/account/account.dart';
 
 class SignUp extends StatelessWidget {
   const SignUp({Key? key}) : super(key: key);
@@ -18,7 +15,6 @@ class SignUp extends StatelessWidget {
   
 
   void navigateToMainScreen2(AuthResponse response) {
-      final userId = response.user?.id ?? '';
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
           builder: (context) => Home(
@@ -30,7 +26,6 @@ class SignUp extends StatelessWidget {
 
   
   void navigateToMainScreen1(AuthResponse response) {
-      final userId = response.user?.id ?? '';
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
           builder: (context) => SignUp(

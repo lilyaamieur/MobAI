@@ -1,3 +1,5 @@
+// ignore_for_file: unnecessary_null_comparison
+
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/colors.dart';
 import 'package:flutter_application_1/views/widgets/navBar.dart';
@@ -101,7 +103,7 @@ class _FriendsScreenState extends State<FriendsScreen> {
 
     if (response == null) {
       setState(() {
-        friends = response ?? [];
+        friends = response;
       });
     }
   }
@@ -131,7 +133,7 @@ class _FriendsScreenState extends State<FriendsScreen> {
 
     if (response == null) {
       setState(() {
-        friendRequests = response ?? [];
+        friendRequests = response;
       });
     }
   }
