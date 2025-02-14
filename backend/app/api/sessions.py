@@ -1,5 +1,4 @@
 from flask import Blueprint, request, jsonify
-from app import supabase
 from collections import deque
 
 # Queue for matchmaking
@@ -21,20 +20,17 @@ def join_session():
             'session_type': 'online',
             'created_by': user_id
         }
-        response = supabase.table('sessions').insert(session_data).execute()
-        session_id = response.data[0]['id']
-
-        # Add both players to the session
-        supabase.table('session_participants').insert([
-            {'session_id': session_id, 'user_id': user_id},
-            {'session_id': session_id, 'user_id': opponent_id}
-        ]).execute()
-
+        # Insert session into the database (replace with your database logic)
+        session_id = 1  # Replace with actual session ID
         return jsonify({
             'session_id': session_id,
-            'opponent_id': opponent_id
+            'opponent_id': opponent_id,
+            'status': 'matched'
         }), 201
     else:
         # Add player to the queue
         matchmaking_queue.append(user_id)
-        return jsonify({'message': 'Waiting for an opponent...'}), 200
+        return jsonify({
+            'status': 'waiting',
+            'message': 'Waiting for an opponent...'
+        }), 200

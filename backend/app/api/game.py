@@ -1,5 +1,4 @@
 from flask import Blueprint, request, jsonify
-from app import supabase, socketio
 
 # Create a Blueprint for game-related routes
 bp = Blueprint('game', __name__)
@@ -16,23 +15,7 @@ def submit_drawing():
     ai_guess = 'Computer'  # Dummy AI guess
     score = 100 if ai_guess == 'Computer' else 0
 
-    # Insert guess into Supabase
-    supabase.table('guesses').insert({
-        'session_id': session_id,
-        'user_id': user_id,
-        'guess_text': ai_guess,
-        'is_correct': True,
-        'confidence': 1.0  # Dummy confidence score
-    }).execute()
-
-    # Broadcast the AI guess to both players
-    socketio.emit('drawing_submitted', {
-        'session_id': session_id,
-        'user_id': user_id,
-        'ai_guess': ai_guess,
-        'score': score
-    }, room=session_id)
-
+    # Insert guess into the database (replace with your database logic)
     return jsonify({
         'ai_guess': ai_guess,
         'score': score
