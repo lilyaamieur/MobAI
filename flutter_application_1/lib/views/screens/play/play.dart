@@ -3,7 +3,10 @@ import 'package:flutter_application_1/colors.dart';
 import 'package:flutter_application_1/drawing/offline_mode.dart';
 //import 'package:flutter_application_1/drawing/offline_mode.dart';
 import 'package:flutter_application_1/drawing/online_mode.dart';
+import 'package:flutter_application_1/rooms/game_screen.dart';
+import 'package:flutter_application_1/src/utils/constants.dart';
 import 'package:flutter_application_1/views/widgets/navBar.dart';
+import 'package:uuid/uuid.dart';
 
 class Play extends StatefulWidget {
   const Play({Key? key}) : super(key: key);
@@ -24,12 +27,14 @@ class _PlayState extends State<Play> {
           alignment: Alignment.center,
           child: Text(
             "Play",
-            style: TextStyle(fontSize: 20, color: Colors.white, fontWeight: FontWeight.bold),
+            style: TextStyle(
+                fontSize: 20, color: Colors.white, fontWeight: FontWeight.bold),
           ),
         ),
       ),
       body: Column(
-        mainAxisAlignment: MainAxisAlignment.center, // Centers content vertically
+        mainAxisAlignment:
+            MainAxisAlignment.center, // Centers content vertically
         crossAxisAlignment: CrossAxisAlignment.center, // Centers horizontally
         children: [
           SizedBox(height: 50),
@@ -63,9 +68,17 @@ class _PlayState extends State<Play> {
       child: ElevatedButton(
         onPressed: () {
           if (text == "Offline Game")
-            Navigator.push(context, MaterialPageRoute(builder: (context) => OfflineMode()));
+            Navigator.push(context,
+                MaterialPageRoute(builder: (context) => OfflineMode()));
           else if (text == "Online Game")
-            Navigator.push(context, MaterialPageRoute(builder: (context) => OnlineMode()));
+            Navigator.push(
+                context, MaterialPageRoute(builder: (context) => OnlineMode()));
+          else if (text == "Join Loby") {
+            final id = supabase.auth.currentUser!.id;
+            final roomId = Uuid().v4();
+            Navigator.push(
+                context, MaterialPageRoute(builder: (context) => GameScreen(roomId: roomId, userId: id,)));
+          }
         },
         style: ElevatedButton.styleFrom(
           backgroundColor: main_green,

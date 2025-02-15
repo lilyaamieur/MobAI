@@ -15,7 +15,7 @@ class Home extends StatelessWidget {
           children: [
             const Text(
               'You are home',
-              style: TextStyle(fontSize: 42),
+              style: TextStyle(fontSize: 42, color: Colors.white),
             ),
             
           ],
