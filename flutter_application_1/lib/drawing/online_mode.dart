@@ -30,8 +30,8 @@ class _OnlineModeState extends State<OnlineMode> {
   String? player2Id;
   String? guessedCategory;
   double guessedAccuracy = 0.0;
-  double player1Accuracy = 0.0;
-  double player2Accuracy = 0.0;
+  double? player1Accuracy = 0.0;
+  double? player2Accuracy = 0.0;
   int? guessTime;
   int? player1GuessTime;
   int? player2GuessTime;
@@ -100,15 +100,15 @@ class _OnlineModeState extends State<OnlineMode> {
         .listen((data) {
       if (data.isNotEmpty) {
         var gameData = data[0];
-
+        print(gameData);
         if (!mounted) return;
 
         setState(() {
           prompt = gameData["prompt"];
           player1Drawing = gameData["player1_drawing"];
           player2Drawing = gameData["player2_drawing"];
-          player1GuessTime = gameData["player1_guess_time"];
-          player2GuessTime = gameData["player2_guess_time"];
+          player1GuessTime = gameData["player1_guessed_time"];
+          player2GuessTime = gameData["player2_guessed_time"];
           player1Accuracy = gameData["player1_accuracy"];
           player2Accuracy = gameData["player2_accuracy"];
         });
@@ -211,7 +211,7 @@ class _OnlineModeState extends State<OnlineMode> {
     } else {
       await supabase.from("games").update({
         "player2_drawing": base64Image,
-        "player2_guess_time": guessTime,
+        "player2_guessed_time": guessTime,
         "player2_accuracy": guessedAccuracy
       }).eq("id", gameId);
     }
@@ -278,7 +278,7 @@ class _OnlineModeState extends State<OnlineMode> {
                     Text("Player 1"),
                     Image.memory(base64Decode(player1Drawing!),
                         width: 100, height: 100),
-                    Text("Accuracy: ${(player1Accuracy * 100).toStringAsFixed(2)}%",
+                    Text("Accuracy: ${(player1Accuracy! * 100).toStringAsFixed(2)}%",
                       style: TextStyle(fontSize: 18)),
                   ],
                 ),
@@ -287,7 +287,7 @@ class _OnlineModeState extends State<OnlineMode> {
                     Text("Player 2"),
                     Image.memory(base64Decode(player2Drawing!),
                         width: 100, height: 100),
-                    Text("Accuracy: ${(player2Accuracy * 100).toStringAsFixed(2)}%",
+                    Text("Accuracy: ${(player2Accuracy! * 100).toStringAsFixed(2)}%",
                       style: TextStyle(fontSize: 18)),
                   ],
                 ),
