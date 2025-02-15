@@ -118,7 +118,9 @@ class _OnlineModeState extends State<OnlineMode> {
         });
 
         if (player1Drawing != null && player2Drawing != null) {
-          determineWinner();
+          setState(() {
+            isGameStarted = false;
+          });
         }
       }
     });
@@ -204,14 +206,6 @@ class _OnlineModeState extends State<OnlineMode> {
 
     stopwatch.stop();
     _gameTimer?.cancel();
-  }
-
-  void determineWinner() {
-    if (player1GuessTime != null && player2GuessTime != null) {
-      setState(() {
-        isGameStarted = false;
-      });
-    }
   }
 
   @override
