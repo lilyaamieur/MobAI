@@ -275,11 +275,21 @@ class _OnlineModeState extends State<OnlineMode> {
       player2Accuracy = guessedAccuracy;
       player2GuessTime = guessTime;
 
-      await supabase.from("games").update({
-        "player2_drawing": base64Image,
-        "player2_guessed_time": guessTime,
-        "player2_accuracy": guessedAccuracy
-      }).eq("id", gameId);
+      if (guessedCategory!.toLowerCase() == prompt.toLowerCase()) {
+        await supabase.from("games").update({
+          "player2_drawing": base64Image,
+          "player2_guessed_time": guessTime,
+          "player2_accuracy": guessedAccuracy,
+          "answer_2": "success",
+        }).eq("id", gameId);
+      } else {
+        await supabase.from("games").update({
+          "player2_drawing": base64Image,
+          "player2_guessed_time": guessTime,
+          "player2_accuracy": 0,
+          "answer_2": "fail"
+        }).eq("id", gameId);
+      }
 
       final res = await supabase
           .from("games")
@@ -297,6 +307,7 @@ class _OnlineModeState extends State<OnlineMode> {
     catch (e) {
       print("Error updating user level : $e");
     }
+
 
     stopwatch.stop();
     _gameTimer?.cancel();
