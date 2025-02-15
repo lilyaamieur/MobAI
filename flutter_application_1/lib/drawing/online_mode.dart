@@ -254,15 +254,13 @@ class _OnlineModeState extends State<OnlineMode> {
           "player1_guessed_time": guessTime,
           "player1_accuracy": guessedAccuracy,
           "answer_1": "success",
-          "status": "finished"
         }).eq("id", gameId);
       } else {
         await supabase.from("games").update({
           "player1_drawing": base64Image,
           "player1_guessed_time": guessTime,
           "player1_accuracy": 0,
-          "answer_1": "fail",
-          "status": "finished"
+          "answer_1": "fail"
         }).eq("id", gameId);
       }
 
