@@ -21,19 +21,23 @@ class _OnlineModeState extends State<OnlineMode> {
   bool isGameStarted = false;
   Timer? _gameTimer;
   Timer? _pollingTimer;
-  Timer? _checkSubmissionTimer;
   int timeLeft = 60;
   bool hasSubmitted = false;
-  String? player1Drawing;
-  String? player2Drawing;
+
+  // Player Data
   String? player1Id;
   String? player2Id;
-  String? guessedCategory;
-  double guessedAccuracy = 0.0;
-  int? guessTime;
+  String? player1Drawing;
+  String? player2Drawing;
+  String? player1GuessWord;
+  String? player2GuessWord;
+  double player1Accuracy = 0.0;
+  double player2Accuracy = 0.0;
   int? player1GuessTime;
   int? player2GuessTime;
-  bool isWinner = false;
+  int? guessTime;
+  String? guessedCategory;
+  double guessedAccuracy = 0.0;
   Stopwatch stopwatch = Stopwatch();
 
   @override
@@ -105,6 +109,10 @@ class _OnlineModeState extends State<OnlineMode> {
           prompt = gameData["prompt"];
           player1Drawing = gameData["player1_drawing"];
           player2Drawing = gameData["player2_drawing"];
+          player1GuessWord = gameData["player1_guess_word"];
+          player2GuessWord = gameData["player2_guess_word"];
+          player1Accuracy = gameData["player1_accuracy"] ?? 0.0;
+          player2Accuracy = gameData["player2_accuracy"] ?? 0.0;
           player1GuessTime = gameData["player1_guess_time"];
           player2GuessTime = gameData["player2_guess_time"];
         });
@@ -114,8 +122,6 @@ class _OnlineModeState extends State<OnlineMode> {
         }
       }
     });
-
-    startSubmissionChecker();
   }
 
   void startTimer() {
@@ -135,24 +141,6 @@ class _OnlineModeState extends State<OnlineMode> {
         if (!hasSubmitted) {
           submitDrawing();
         }
-      }
-    });
-  }
-
-  void startSubmissionChecker() {
-    _checkSubmissionTimer = Timer.periodic(Duration(seconds: 2), (timer) async {
-      var response = await supabase.from("games").select().eq("id", gameId).single();
-
-      if (!mounted) return;
-
-      setState(() {
-        player1Drawing = response["player1_drawing"];
-        player2Drawing = response["player2_drawing"];
-      });
-
-      if (player1Drawing != null && player2Drawing != null) {
-        timer.cancel();
-        determineWinner();
       }
     });
   }
@@ -201,11 +189,15 @@ class _OnlineModeState extends State<OnlineMode> {
     if (userId == player1Id) {
       await supabase.from("games").update({
         "player1_drawing": base64Image,
+        "player1_guess_word": guessedCategory,
+        "player1_accuracy": guessedAccuracy * 100,
         "player1_guess_time": guessTime,
       }).eq("id", gameId);
     } else {
       await supabase.from("games").update({
         "player2_drawing": base64Image,
+        "player2_guess_word": guessedCategory,
+        "player2_accuracy": guessedAccuracy * 100,
         "player2_guess_time": guessTime,
       }).eq("id", gameId);
     }
@@ -217,7 +209,7 @@ class _OnlineModeState extends State<OnlineMode> {
   void determineWinner() {
     if (player1GuessTime != null && player2GuessTime != null) {
       setState(() {
-        isWinner = player1GuessTime! < player2GuessTime!;
+        isGameStarted = false;
       });
     }
   }
@@ -226,7 +218,6 @@ class _OnlineModeState extends State<OnlineMode> {
   void dispose() {
     _gameTimer?.cancel();
     _pollingTimer?.cancel();
-    _checkSubmissionTimer?.cancel();
     _controller.removeListener(_onStroke);
     super.dispose();
   }
@@ -240,25 +231,45 @@ class _OnlineModeState extends State<OnlineMode> {
           Text("Time Left: $timeLeft seconds",
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
           Expanded(
-            child: Container(
+            child: DrawingBoard(
+              controller: _controller,
+              background: Container(
                 color: Colors.white,
                 width: MediaQuery.of(context).size.width,
                 height: MediaQuery.of(context).size.width,
               ),
+              showDefaultActions: true,
+              showDefaultTools: true,
+            ),
           ),
           Text("AI Prediction: ${guessedCategory ?? "Waiting..."}",
-              style: TextStyle(fontSize: 18)),
-          Text("Accuracy: ${(guessedAccuracy * 100).toStringAsFixed(2)}%",
               style: TextStyle(fontSize: 18)),
           ElevatedButton(
             onPressed: submitDrawing,
             child: Text(hasSubmitted ? "Submitted!" : "Submit Drawing"),
           ),
           if (player1Drawing != null && player2Drawing != null) ...[
-            Text(isWinner ? "You Won!" : "You Lost!",
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-            Text("Time to Guess: ${guessTime}s"),
-          ],
+            Text("Game Over!", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                Column(
+                  children: [
+                    Text("Player 1: $player1GuessWord"),
+                    Text("Accuracy: ${player1Accuracy.toStringAsFixed(2)}%"),
+                    Text("Time: ${player1GuessTime}s"),
+                  ],
+                ),
+                Column(
+                  children: [
+                    Text("Player 2: $player2GuessWord"),
+                    Text("Accuracy: ${player2Accuracy.toStringAsFixed(2)}%"),
+                    Text("Time: ${player2GuessTime}s"),
+                  ],
+                ),
+              ],
+            ),
+          ]
         ],
       ),
     );
