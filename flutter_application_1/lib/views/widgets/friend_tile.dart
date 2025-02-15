@@ -9,7 +9,7 @@ class FriendTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    bool isOnline = status == 'Online';
+    bool isOnline = status == 'ONLINE';
 
     return Container(
       margin: EdgeInsets.only(bottom: 12),
