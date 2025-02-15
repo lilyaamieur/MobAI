@@ -187,7 +187,7 @@ class _OnlineModeState extends State<OnlineMode> {
           guessTime = stopwatch.elapsedMilliseconds ~/ 1000;
         });
 
-        if (guessedWord.toLowerCase() == prompt.toLowerCase()) {
+        if (guessedWord.toLowerCase() == prompt.toLowerCase() && guessedAccuracy > 0.75) {
           submitDrawing();
         }
       }
