@@ -128,7 +128,7 @@ class SignUp extends StatelessWidget {
               height: 0.5*screenWidth,
               child: Image.asset('lib/images/logo.png'),
             ),
-            const SizedBox(height: 50),
+            const SizedBox(height: 25),
             Align(
               alignment: Alignment.center,
               child: Text(
