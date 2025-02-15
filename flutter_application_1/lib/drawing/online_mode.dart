@@ -70,33 +70,39 @@ class _OnlineModeState extends State<OnlineMode> {
 
     if (response != null) {
       gameId = response["id"];
-      //final response_1 = await supabase.from("games").select("player1_id").eq("id", gameId).single();
+      final response_1 = await supabase.from("games").select("player1_id").eq("id", gameId).single();
       //final response_2 = await supabase.from("auth.users").select("level").eq("id", response_1["player1_id"]).single();
+      final user = supabase.auth.currentUser;
+      final double level_1 = (user?.userMetadata?['level'] as num?)?.toDouble() ?? 1.0;
+      final response_2 = await supabase
+      .from('auth.users')
+      .select('metadata')
+      .eq('id', response_1['player1_id'])
+      .single();
 
-      //int level_2 = response_2["level"];
+      final double level_2 = (response_2['metadata']['level'] as num?)?.toDouble() ?? 1.0;
 
-      //if (level_1 <= level_2 + 1 && level_1 >= level_2 - 1) {
+      if (level_1 <= level_2 + 0.3 && level_1 >= level_2 - 0.3) {
       final response_3 = await supabase
           .from("games")
           .select("prompt")
           .eq("id", gameId)
           .single();
-      prompt = response_3["prompt"];
-      print("prompt: $prompt");
-      await supabase.from("games").update(
+          prompt = response_3["prompt"];
+          print("prompt: $prompt");
+          await supabase.from("games").update(
           {"player2_id": userId, "status": "in_progress"}).eq("id", gameId);
+      }
+      else {
+        gameId = const Uuid().v4();
+        await supabase.from("games").insert({
+          "id": gameId,
+          "prompt": prompt,
+          "player1_id": userId,
+          "status": "waiting"
+        });
 
-      //}
-      // else {
-      //   gameId = const Uuid().v4();
-      //   await supabase.from("games").insert({
-      //     "id": gameId,
-      //     "prompt": prompt,
-      //     "player1_id": userId,
-      //     "status": "waiting"
-      //   });
-
-      // }
+       }
     } else {
       //fetchPromptAndMatch();
       gameId = const Uuid().v4();
@@ -295,8 +301,8 @@ class _OnlineModeState extends State<OnlineMode> {
           .select("player1_accuracy, player1_guessed_time")
           .eq("id", gameId);
 
-      player1Accuracy = res[0]["player1_accuracy"];
-      player1GuessTime = res[0]["player1_guessed_time"];
+      //player1Accuracy = (res[0]["player1_accuracy"]).toDouble();
+      //player1GuessTime = res[0]["player1_guessed_time"].toDouble();
     }
 
     try {
@@ -308,9 +314,9 @@ class _OnlineModeState extends State<OnlineMode> {
       print("Error updating user level : $e");
     }
 
-    final response = await supabase.auth.currentUser!.userMetadata!;
-    int newLevel = response["level"];
-    print("new level: $newLevel");
+    // final response = await supabase.auth.currentUser!.userMetadata!;
+    // int newLevel = response["level"];
+    // print("new level: $newLevel");
 
     stopwatch.stop();
     _gameTimer?.cancel();
@@ -345,16 +351,20 @@ class _OnlineModeState extends State<OnlineMode> {
         "user_id": userId,
         "success": success,
         "time_taken": timeTaken,
-        "accuracy": accuracy
+        "confidence": accuracy
       }),
     );
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
-      int newLevel = data['new_proficiency'];
-      await supabase.from("auth.users").update({
-        "metadata": {"level": newLevel}
-      }).eq("id", userId);
+      double newLevel = data['new_proficiency'];
+      await supabase.auth.updateUser(UserAttributes(
+      data: {"level": newLevel},
+    ));
+
+      print(response);
+    } else {
+      print("Error updating user level");
     }
   }
 

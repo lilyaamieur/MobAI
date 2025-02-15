@@ -2,6 +2,8 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/src/utils/constants.dart';
+import 'package:flutter_application_1/supabase_auth_ui.dart';
 import 'package:flutter_drawing_board/flutter_drawing_board.dart';
 import 'package:http/http.dart' as http;
 
@@ -19,11 +21,14 @@ class _OfflineModeState extends State<OfflineMode> {
   String? predictedCategory;
   double predictionProbability = 0.0;
   String? finalScore;
-  String prompt = "apple"; // Example prompt
+  String prompt = ""; // Example prompt
+  String userId = "";
 
   @override
   void initState() {
     super.initState();
+    userId = supabase.auth.currentUser!.id;
+    fetchPromptAndMatch();
     startTimer();
     _controller.addListener(_onStroke); // Detect strokes
   }
@@ -41,6 +46,17 @@ class _OfflineModeState extends State<OfflineMode> {
         }
       }
     });
+  }
+
+  Future<void> fetchPromptAndMatch() async {
+    final response = await http
+        .get(Uri.parse("http://127.0.0.1:5005/get_word?user_id=$userId"));
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      setState(() {
+        prompt = data['label'];
+      });
+    }
   }
 
   Future<void> _onStroke() async {
@@ -76,6 +92,33 @@ class _OfflineModeState extends State<OfflineMode> {
     }
   }
 
+  Future<void> updateUserLevel(
+      bool success, int timeTaken, double accuracy) async {
+    final response = await http.post(
+      Uri.parse("http://127.0.0.1:5005/update_proficiency"),
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({
+        "user_id": userId,
+        "success": success,
+        "time_taken": timeTaken,
+        "confidence": accuracy
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      print("data: $data");
+      double newLevel = data['new_proficiency'];
+      await supabase.auth.updateUser(UserAttributes(
+      data: {"level": newLevel},
+    ));
+
+      print(response);
+    } else {
+      print("Error updating user level");
+    }
+  }
+
   Future<void> submitDrawing() async {
     if (hasSubmitted) return;
     setState(() => hasSubmitted = true);
@@ -90,8 +133,18 @@ class _OfflineModeState extends State<OfflineMode> {
       // Use the last AI guess if time expired or user submitted manually
       String finalGuess = predictedCategory ?? "Unknown";
       double finalAccuracy = predictionProbability * 100;
-      finalScore = "${finalAccuracy.toInt()} - $finalGuess";
+      finalScore = "${finalAccuracy.toInt()} points for $finalGuess";
     });
+
+    try{
+      await updateUserLevel(
+        prompt.toLowerCase() == predictedCategory?.toLowerCase(),
+        60 - timeLeft,
+        predictionProbability);
+    }
+    catch(e){
+      print("Error updating user level: $e");
+    }
 
     _timer?.cancel();
   }
@@ -133,9 +186,11 @@ class _OfflineModeState extends State<OfflineMode> {
           ),
           if (hasSubmitted) ...[
             SizedBox(height: 20),
-            Text("Game Over!", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+            Text("Game Over!",
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
             if (drawingImage != null)
-              Image.memory(base64Decode(drawingImage!), width: 100, height: 100),
+              Image.memory(base64Decode(drawingImage!),
+                  width: 100, height: 100),
             Text("Final Score: $finalScore", style: TextStyle(fontSize: 20)),
           ],
         ],
