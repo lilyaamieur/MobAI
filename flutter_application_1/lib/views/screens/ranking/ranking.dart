@@ -26,43 +26,43 @@ class _FriendsScreenState extends State<FriendsScreen> {
   }
 
   Future<void> fetchFriends() async {
-    final user = supabase.auth.currentUser;
-    if (user == null) return;
+  final user = supabase.auth.currentUser;
+  if (user == null) return;
 
-    final accountResponse = await supabase
+  final accountResponse = await supabase
+      .from('Account')
+      .select('id')
+      .eq('email', user.email!)
+      .maybeSingle();
+
+  if (accountResponse == null) return;
+
+  final String accountId = accountResponse['id'].toString();
+
+  final friendIdsResponse = await supabase
+      .from('friends')
+      .select('friend_id')
+      .eq('user_id', accountId)
+      .eq('status', 'accepted');
+
+  List<Map<String, dynamic>> friendList = [];
+  for (var friend in friendIdsResponse) {
+    final accountData = await supabase
         .from('Account')
-        .select('id')
-        .eq('email', user.email!)
+        .select('id, user_name, status') // ✅ Fetch status
+        .eq('id', friend['friend_id'])
         .maybeSingle();
-
-    if (accountResponse == null) return;
-
-    final String accountId = accountResponse['id'].toString();
-
-    final friendIdsResponse = await supabase
-        .from('friends')
-        .select('friend_id')
-        .eq('user_id', accountId)
-        .eq('status', 'accepted');
-
-    List<Map<String, dynamic>> friendList = [];
-    for (var friend in friendIdsResponse) {
-      final accountData = await supabase
-          .from('Account')
-          .select('id, user_name')
-          .eq('id', friend['friend_id'])
-          .maybeSingle();
-      if (accountData != null) {
-        friendList.add(accountData);
-      }
-    }
-
-    if (mounted) {
-      setState(() {
-        friends = friendList;
-      });
+    if (accountData != null) {
+      friendList.add(accountData);
     }
   }
+
+  if (mounted) {
+    setState(() {
+      friends = friendList;
+    });
+  }
+}
 
   Future<void> fetchFriendRequests() async {
     final user = supabase.auth.currentUser;
@@ -177,7 +177,7 @@ class _FriendsScreenState extends State<FriendsScreen> {
                       itemCount: friends.length,
                       itemBuilder: (context, index) {
                         return FriendTile(
-                            name: friends[index]['user_name'], status: "offline");
+                            name: friends[index]['user_name'], status: friends[index]['status']);
                       },
                     ),
             ),

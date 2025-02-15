@@ -17,25 +17,25 @@ class SignUp extends StatefulWidget {
 }
 
 class _SignUpState extends State<SignUp> {
-
   @override
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
 
-    Future<void> updateAccountStatus(String userId, String status) async {
+    Future<void> updateAccountStatus(String usermail, String status) async {
       final supabase = Supabase.instance.client;
       await supabase
           .from('Account')
-          .update({'status': status}).eq('id', userId);
+          .update({'status': status}).eq('email', usermail);
     }
 
     void navigateToMainScreen2(AuthResponse response) {
-      final userId = response.user?.id ?? '';
+      final usermail = response.user?.email ?? '';
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
           builder: (context) => Home(),
         ),
       );
+      updateAccountStatus(usermail,'ONLINE');
     }
 
     void navigateToMainScreen1(AuthResponse response) {
