@@ -206,6 +206,12 @@ class _OnlineModeState extends State<OnlineMode> {
       player1Accuracy = guessedAccuracy;
       player1GuessTime = guessTime;
 
+      await supabase.from("games").update({
+        "player1_drawing": base64Image,
+        "player1_guessed_time": guessTime,
+        "player1_accuracy": guessedAccuracy
+      }).eq("id", gameId);
+
       final res = await supabase
           .from("games")
           .select("player2_accuracy, player2_guessed_time")
@@ -213,15 +219,15 @@ class _OnlineModeState extends State<OnlineMode> {
 
       player2Accuracy = res[0]["player2_accuracy"];
       player2GuessTime = res[0]["player2_guessed_time"];
-        
-      await supabase.from("games").update({
-        "player1_drawing": base64Image,
-        "player1_guessed_time": guessTime,
-        "player1_accuracy": guessedAccuracy
-      }).eq("id", gameId);
     } else {
       player2Accuracy = guessedAccuracy;
       player2GuessTime = guessTime;
+
+      await supabase.from("games").update({
+        "player2_drawing": base64Image,
+        "player2_guessed_time": guessTime,
+        "player2_accuracy": guessedAccuracy
+      }).eq("id", gameId);
 
       final res = await supabase
           .from("games")
@@ -230,12 +236,6 @@ class _OnlineModeState extends State<OnlineMode> {
 
       player1Accuracy = res[0]["player1_accuracy"];
       player1GuessTime = res[0]["player1_guessed_time"];
-
-      await supabase.from("games").update({
-        "player2_drawing": base64Image,
-        "player2_guessed_time": guessTime,
-        "player2_accuracy": guessedAccuracy
-      }).eq("id", gameId);
     }
 
     stopwatch.stop();
@@ -253,6 +253,9 @@ class _OnlineModeState extends State<OnlineMode> {
         print(player1GuessTime.toString() + player2GuessTime.toString());
         print("is winner : " + isWinner.toString());
       });
+      isWinner = false;
+    } else {
+      isWinner = true;
     }
 
     print(player1GuessTime);
