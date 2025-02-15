@@ -12,9 +12,15 @@ import 'package:flutter_application_1/views/screens/account/account.dart';
 class SignUp extends StatelessWidget {
   const SignUp({Key? key}) : super(key: key);
 
+
+
+
   @override
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
+  
+
+
   
 
   void navigateToMainScreen2(AuthResponse response) {
