@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/colors.dart';
 import 'package:flutter_application_1/views/widgets/navBar.dart';
+import 'package:flutter_application_1/views/widgets/friend_tile.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class FriendsScreen extends StatefulWidget {
   const FriendsScreen({Key? key}) : super(key: key);
@@ -10,12 +12,101 @@ class FriendsScreen extends StatefulWidget {
 }
 
 class _FriendsScreenState extends State<FriendsScreen> {
-  List<Map<String, dynamic>> friends = [
-    {'name': 'Lalak', 'status': 'Online'},
-    {'name': 'Lalak', 'status': 'Offline'},
-    {'name': 'Lalak', 'status': 'Offline'},
-    {'name': 'Lalak', 'status': 'Offline'},
-  ];
+  final SupabaseClient supabase = Supabase.instance.client;
+  final TextEditingController searchController = TextEditingController();
+
+  List<Map<String, dynamic>> friends = [];
+  List<Map<String, dynamic>> friendRequests = [];
+
+  @override
+  void initState() {
+    super.initState();
+    fetchFriends();
+    fetchFriendRequests();
+  }
+
+  Future<void> fetchFriends() async {
+  final user = supabase.auth.currentUser;
+  if (user == null) return;
+
+  final accountResponse = await supabase
+      .from('Account')
+      .select('id')
+      .eq('email', user.email!)
+      .maybeSingle();
+
+  if (accountResponse == null) return;
+
+  final String accountId = accountResponse['id'].toString();
+
+  final friendIdsResponse = await supabase
+      .from('friends')
+      .select('friend_id')
+      .eq('user_id', accountId)
+      .eq('status', 'accepted');
+
+  List<Map<String, dynamic>> friendList = [];
+  for (var friend in friendIdsResponse) {
+    final accountData = await supabase
+        .from('Account')
+        .select('id, user_name, status') // ✅ Fetch status
+        .eq('id', friend['friend_id'])
+        .maybeSingle();
+    if (accountData != null) {
+      friendList.add(accountData);
+    }
+  }
+
+  if (mounted) {
+    setState(() {
+      friends = friendList;
+    });
+  }
+}
+
+  Future<void> fetchFriendRequests() async {
+    final user = supabase.auth.currentUser;
+    if (user == null) return;
+
+    final accountResponse = await supabase
+        .from('Account')
+        .select('id')
+        .eq('email', user.email!)
+        .maybeSingle();
+
+    if (accountResponse == null) return;
+    final String accountId = accountResponse['id'].toString();
+
+    final receivedResponse = await supabase
+        .from('friends')
+        .select('user_id')
+        .eq('friend_id', accountId)
+        .eq('status', 'pending');
+
+    List<Map<String, dynamic>> receivedRequests = [];
+    for (var request in receivedResponse) {
+      final accountData = await supabase
+          .from('Account')
+          .select('id, user_name')
+          .eq('id', request['user_id'])
+          .maybeSingle();
+      if (accountData != null) {
+        receivedRequests.add(accountData);
+      }
+    }
+
+    if (mounted) {
+      setState(() {
+        friendRequests = receivedRequests;
+      });
+    }
+  }
+
+  Future<void> updateRequestStatus(String userId, String status) async {
+    await supabase.from('friends').update({'status': status}).match({'user_id': userId});
+    fetchFriends();
+    fetchFriendRequests();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -23,30 +114,23 @@ class _FriendsScreenState extends State<FriendsScreen> {
       backgroundColor: main_black,
       appBar: AppBar(
         backgroundColor: main_black,
-        automaticallyImplyLeading: true,
-        elevation: 0,
-        title: Text(
+        title: const Text(
           "Friends",
           style: TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
+              fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
         ),
         centerTitle: true,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text("Add a new friend !", style: TextStyle(color: Colors.white)),
-            SizedBox(height: 8),
             TextField(
+              controller: searchController,
               decoration: InputDecoration(
-                prefixIcon: Icon(Icons.search, color: main_green),
+                prefixIcon: const Icon(Icons.search, color: main_green),
                 hintText: "Username",
-                hintStyle: TextStyle(color: Colors.white70),
+                hintStyle: const TextStyle(color: Colors.white70),
                 filled: true,
                 fillColor: Colors.black54,
                 border: OutlineInputBorder(
@@ -54,51 +138,48 @@ class _FriendsScreenState extends State<FriendsScreen> {
                   borderSide: BorderSide.none,
                 ),
               ),
-              style: TextStyle(color: Colors.white),
+              style: const TextStyle(color: Colors.white),
             ),
-            SizedBox(height: 20),
-            Divider(color: Colors.white24),
-            Text("Invite a friend to play together !", style: TextStyle(color: Colors.white)),
-            SizedBox(height: 12),
+            const Divider(color: Colors.white24),
+            const Text("Friend Requests", style: TextStyle(color: Colors.white)),
+            friendRequests.isEmpty
+                ? const Text("No pending requests",
+                    style: TextStyle(color: Colors.white70))
+                : Column(
+                    children: friendRequests.map((request) {
+                      return ListTile(
+                        title: Text(request['user_name'],
+                            style: const TextStyle(color: Colors.white)),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.check, color: Colors.green),
+                              onPressed: () => updateRequestStatus(request['id'], 'accepted'),
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.close, color: Colors.red),
+                              onPressed: () => updateRequestStatus(request['id'], 'rejected'),
+                            ),
+                          ],
+                        ),
+                      );
+                    }).toList(),
+                  ),
+            const Divider(color: Colors.white24),
+            const Text("Your Friends", style: TextStyle(color: Colors.white)),
             Expanded(
-              child: ListView.builder(
-                itemCount: friends.length,
-                itemBuilder: (context, index) {
-                  final friend = friends[index];
-                  bool isOnline = friend['status'] == 'Online';
-                  return Container(
-                    margin: EdgeInsets.only(bottom: 12),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: isOnline
-                            ? [const Color.fromARGB(253, 255, 255, 255), main_green]
-                            : [const Color.fromARGB(255, 255, 255, 255), Colors.white10],
-                        begin: Alignment.centerLeft,
-                        end: Alignment.centerRight,
-                      ),
-                      borderRadius: BorderRadius.circular(12),
+              child: friends.isEmpty
+                  ? const Center(
+                      child: Text("No friends yet",
+                          style: TextStyle(color: Colors.white70)))
+                  : ListView.builder(
+                      itemCount: friends.length,
+                      itemBuilder: (context, index) {
+                        return FriendTile(
+                            name: friends[index]['user_name'], status: friends[index]['status']);
+                      },
                     ),
-                    child: ListTile(
-                      leading: CircleAvatar(
-                        backgroundColor: Colors.purple[200],
-                        child: Text("A", style: TextStyle(color: Colors.white)),
-                      ),
-                      title: Text(
-                        friend['name'],
-                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-                      ),
-                      subtitle: Text(
-                        friend['status'],
-                        style: TextStyle(color: isOnline ? main_green : Colors.redAccent),
-                      ),
-                      trailing: IconButton(
-                        icon: Icon(Icons.add_circle, color: main_green, size: 30),
-                        onPressed: () {},
-                      ),
-                    ),
-                  );
-                },
-              ),
             ),
           ],
         ),
