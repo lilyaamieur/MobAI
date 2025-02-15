@@ -222,22 +222,17 @@ class _OnlineModeState extends State<OnlineMode> {
       appBar: AppBar(title: Text("Online Mode: Draw $prompt")),
       body: Column(
         children: [
-          Text("Time Left: $timeLeft seconds",
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+          if (!hasSubmitted)
+            Text("Time Left: $timeLeft seconds",
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
           Expanded(
             child: DrawingBoard(
               controller: _controller,
-              background: Container(
-                color: Colors.white,
-                width: MediaQuery.of(context).size.width,
-                height: MediaQuery.of(context).size.width,
-              ),
+              background: Container(color: Colors.white),
               showDefaultActions: true,
               showDefaultTools: true,
             ),
           ),
-          Text("AI Prediction: ${guessedCategory ?? "Waiting..."}",
-              style: TextStyle(fontSize: 18)),
           ElevatedButton(
             onPressed: submitDrawing,
             child: Text(hasSubmitted ? "Submitted!" : "Submit Drawing"),
@@ -252,6 +247,7 @@ class _OnlineModeState extends State<OnlineMode> {
                     Text("Player 1: $player1GuessWord"),
                     Text("Accuracy: ${player1Accuracy.toStringAsFixed(2)}%"),
                     Text("Time: ${player1GuessTime}s"),
+                    Image.memory(base64Decode(player1Drawing!), width: 100, height: 100),
                   ],
                 ),
                 Column(
@@ -259,6 +255,7 @@ class _OnlineModeState extends State<OnlineMode> {
                     Text("Player 2: $player2GuessWord"),
                     Text("Accuracy: ${player2Accuracy.toStringAsFixed(2)}%"),
                     Text("Time: ${player2GuessTime}s"),
+                    Image.memory(base64Decode(player2Drawing!), width: 100, height: 100),
                   ],
                 ),
               ],
