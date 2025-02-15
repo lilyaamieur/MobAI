@@ -17,7 +17,7 @@ class _OnlineModeState extends State<OnlineMode> {
   final SupabaseClient supabase = Supabase.instance.client;
   String gameId = "";
   String userId = "";
-  String prompt = "apple";
+  late String prompt = '';
   bool isGameStarted = false;
   Timer? _gameTimer;
   Timer? _pollingTimer;
@@ -42,20 +42,21 @@ class _OnlineModeState extends State<OnlineMode> {
   void initState() {
     super.initState();
     userId = supabase.auth.currentUser!.id;
-    fetchPromptAndMatch();
+   fetchPromptAndMatch();
     findOrCreateGame();
     _controller.addListener(_onStroke);
   }
 
   Future<void> fetchPromptAndMatch() async {
-    final response = await http.get(Uri.parse("http://127.0.0.1:5005/get_word?user_id=$userId"));
+    final response = await http
+        .get(Uri.parse("http://127.0.0.1:5005/get_word?user_id=$userId"));
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
       setState(() {
         prompt = data['label'];
       });
     }
-    findOrCreateGame();
+    //findOrCreateGame();
   }
 
   Future<void> findOrCreateGame() async {
@@ -66,29 +67,37 @@ class _OnlineModeState extends State<OnlineMode> {
         .limit(1)
         .maybeSingle();
 
-    int level_1 = supabase.auth.currentUser!.userMetadata!["level"];
+    //int level_1 = supabase.auth.currentUser!.userMetadata!["level"];
 
     if (response != null) {
       gameId = response["id"];
-      final response_1 = await supabase.from("games").select("player1_id").eq("id", gameId).single();
-      final response_2 = await supabase.from("auth.users").select("level").eq("id", response_1["player1_id"]).single(); 
+      //final response_1 = await supabase.from("games").select("player1_id").eq("id", gameId).single();
+      //final response_2 = await supabase.from("auth.users").select("level").eq("id", response_1["player1_id"]).single();
 
-      int level_2 = response_2["level"];
+      //int level_2 = response_2["level"];
 
-      if (level_1 <= level_2 + 1 && level_1 >= level_2 - 1) {
-        await supabase.from("games").update(
+      // if (level_1 <= level_2 + 1 && level_1 >= level_2 - 1) {
+      await supabase.from("games").update(
           {"player2_id": userId, "status": "in_progress"}).eq("id", gameId);
-      }
-      else {
-        gameId = const Uuid().v4();
-        await supabase.from("games").insert({
-          "id": gameId,
-          "prompt": prompt,
-          "player1_id": userId,
-          "status": "waiting"
-        });
-      }
+
+      final response_3 = await supabase
+          .from('games')
+          .select('prompt')
+          .eq('id', gameId)
+          .single();
+      prompt = response_3['prompt'];
+      //}
+      //else {
+      //  gameId = const Uuid().v4();
+      //  await supabase.from("games").insert({
+      //    "id": gameId,
+      //    "prompt": prompt,
+      //    "player1_id": userId,
+      //    "status": "waiting"
+      //  });
+      // }
     } else {
+      //fetchPromptAndMatch();
       gameId = const Uuid().v4();
       await supabase.from("games").insert({
         "id": gameId,

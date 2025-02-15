@@ -34,3 +34,6 @@ flutter:
     - .env
     - lib/images/play.png
     - lib/images/douda.png
+    - lib/images/logo.png
+    - lib/images/logo-cut.png
+
