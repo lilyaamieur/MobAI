@@ -203,21 +203,39 @@ class _OnlineModeState extends State<OnlineMode> {
     String base64Image = base64Encode(uint8List);
 
     if (userId == player1Id) {
+      player1Accuracy = guessedAccuracy;
+      player1GuessTime = guessTime;
+
+      final res = await supabase
+          .from("games")
+          .select("player2_accuracy, player2_guessed_time")
+          .eq("id", gameId);
+
+      player2Accuracy = res[0]["player2_accuracy"];
+      player2GuessTime = res[0]["player2_guessed_time"];
+        
       await supabase.from("games").update({
         "player1_drawing": base64Image,
         "player1_guessed_time": guessTime,
         "player1_accuracy": guessedAccuracy
       }).eq("id", gameId);
-      player1Accuracy = guessedAccuracy;
-      player1GuessTime = guessTime;
     } else {
+      player2Accuracy = guessedAccuracy;
+      player2GuessTime = guessTime;
+
+      final res = await supabase
+          .from("games")
+          .select("player1_accuracy, player1_guessed_time")
+          .eq("id", gameId);
+
+      player1Accuracy = res[0]["player1_accuracy"];
+      player1GuessTime = res[0]["player1_guessed_time"];
+
       await supabase.from("games").update({
         "player2_drawing": base64Image,
         "player2_guessed_time": guessTime,
         "player2_accuracy": guessedAccuracy
       }).eq("id", gameId);
-      player2Accuracy = guessedAccuracy;
-      player2GuessTime = guessTime;
     }
 
     stopwatch.stop();
@@ -236,6 +254,9 @@ class _OnlineModeState extends State<OnlineMode> {
         print("is winner : " + isWinner.toString());
       });
     }
+
+    print(player1GuessTime);
+    print(player2GuessTime);
   }
 
   @override
@@ -294,7 +315,7 @@ class _OnlineModeState extends State<OnlineMode> {
                     Image.memory(base64Decode(player2Drawing!),
                         width: 100, height: 100),
                     // Text("Accuracy: ${(player2Accuracy! * 100).toStringAsFixed(2)}%",
-                    // style: TextStyle(fontSize: 18)),
+                    //style: TextStyle(fontSize: 18)),
                   ],
                 ),
               ],
