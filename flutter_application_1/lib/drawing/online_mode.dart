@@ -70,39 +70,33 @@ class _OnlineModeState extends State<OnlineMode> {
 
     if (response != null) {
       gameId = response["id"];
-      final response_1 = await supabase.from("games").select("player1_id").eq("id", gameId).single();
+      //final response_1 = await supabase.from("games").select("player1_id").eq("id", gameId).single();
       //final response_2 = await supabase.from("auth.users").select("level").eq("id", response_1["player1_id"]).single();
-      final user = supabase.auth.currentUser;
-      final double level_1 = (user?.userMetadata?['level'] as num?)?.toDouble() ?? 1.0;
-      final response_2 = await supabase
-      .from('auth.users')
-      .select('metadata')
-      .eq('id', response_1['player1_id'])
-      .single();
 
-      final double level_2 = (response_2['metadata']['level'] as num?)?.toDouble() ?? 1.0;
+      //int level_2 = response_2["level"];
 
-      if (level_1 <= level_2 + 0.3 && level_1 >= level_2 - 0.3) {
+      //if (level_1 <= level_2 + 1 && level_1 >= level_2 - 1) {
       final response_3 = await supabase
           .from("games")
           .select("prompt")
           .eq("id", gameId)
           .single();
-          prompt = response_3["prompt"];
-          print("prompt: $prompt");
-          await supabase.from("games").update(
+      prompt = response_3["prompt"];
+      print("prompt: $prompt");
+      await supabase.from("games").update(
           {"player2_id": userId, "status": "in_progress"}).eq("id", gameId);
-      }
-      else {
-        gameId = const Uuid().v4();
-        await supabase.from("games").insert({
-          "id": gameId,
-          "prompt": prompt,
-          "player1_id": userId,
-          "status": "waiting"
-        });
 
-       }
+      //}
+      // else {
+      //   gameId = const Uuid().v4();
+      //   await supabase.from("games").insert({
+      //     "id": gameId,
+      //     "prompt": prompt,
+      //     "player1_id": userId,
+      //     "status": "waiting"
+      //   });
+
+      // }
     } else {
       //fetchPromptAndMatch();
       gameId = const Uuid().v4();
