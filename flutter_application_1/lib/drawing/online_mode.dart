@@ -240,11 +240,16 @@ class _OnlineModeState extends State<OnlineMode> {
           Text("Time Left: $timeLeft seconds",
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
           Expanded(
-            child: Container(
+            child: DrawingBoard(
+              controller: _controller,
+              background: Container(
                 color: Colors.white,
                 width: MediaQuery.of(context).size.width,
                 height: MediaQuery.of(context).size.width,
               ),
+              showDefaultActions: true,
+              showDefaultTools: true,
+            ),
           ),
           Text("AI Prediction: ${guessedCategory ?? "Waiting..."}",
               style: TextStyle(fontSize: 18)),
