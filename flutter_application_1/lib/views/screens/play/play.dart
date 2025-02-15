@@ -3,6 +3,7 @@ import 'package:flutter_application_1/colors.dart';
 import 'package:flutter_application_1/drawing/offline_mode.dart';
 //import 'package:flutter_application_1/drawing/offline_mode.dart';
 import 'package:flutter_application_1/drawing/online_mode.dart';
+import 'package:flutter_application_1/rooms/rooms_screen.dart';
 import 'package:flutter_application_1/views/widgets/navBar.dart';
 
 class Play extends StatefulWidget {
@@ -66,6 +67,8 @@ class _PlayState extends State<Play> {
             Navigator.push(context, MaterialPageRoute(builder: (context) => OfflineMode()));
           else if (text == "Online Game")
             Navigator.push(context, MaterialPageRoute(builder: (context) => OnlineMode()));
+          else if (text == "Join Loby") 
+          Navigator.push(context, MaterialPageRoute(builder: (context) => RoomsScreen()));
         },
         style: ElevatedButton.styleFrom(
           backgroundColor: main_green,
