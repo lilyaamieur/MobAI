@@ -242,7 +242,11 @@ class _OnlineModeState extends State<OnlineMode> {
           Expanded(
             child: DrawingBoard(
               controller: _controller,
-              background: Container(color: Colors.white),
+              background: Container(
+                color: Colors.white,
+                width: MediaQuery.of(context).size.width,
+                height: MediaQuery.of(context).size.width,
+              ),
               showDefaultActions: true,
               showDefaultTools: true,
             ),
@@ -256,6 +260,25 @@ class _OnlineModeState extends State<OnlineMode> {
             child: Text(hasSubmitted ? "Submitted!" : "Submit Drawing"),
           ),
           if (player1Drawing != null && player2Drawing != null) ...[
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                Column(
+                  children: [
+                    Text("Player 1"),
+                    Image.memory(base64Decode(player1Drawing!),
+                        width: 100, height: 100),
+                  ],
+                ),
+                Column(
+                  children: [
+                    Text("Player 2"),
+                    Image.memory(base64Decode(player2Drawing!),
+                        width: 100, height: 100),
+                  ],
+                ),
+              ],
+            ),
             Text(isWinner ? "You Won!" : "You Lost!",
                 style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
             Text("Time to Guess: ${guessTime}s"),
