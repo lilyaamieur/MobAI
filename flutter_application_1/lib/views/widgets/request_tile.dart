@@ -9,14 +9,14 @@ class FriendTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    bool isOnline = status == 'ONLINE';
+    bool isOnline = status == 'Online';
 
     return Container(
       margin: EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: isOnline
-              ? [const Color.fromARGB(50, 255, 255, 255), main_green]
+              ? [const Color.fromARGB(50, 255, 255, 255), const Color.fromARGB(206, 144, 0, 255)]
               : [const Color.fromARGB(50, 255, 255, 255), Colors.white10],
           begin: Alignment.centerLeft,
           end: Alignment.centerRight,
@@ -34,11 +34,7 @@ class FriendTile extends StatelessWidget {
         ),
         subtitle: Text(
           status,
-          style: TextStyle(color: isOnline ? main_green : Colors.redAccent),
-        ),
-        trailing: IconButton(
-          icon: Icon(Icons.add_circle, color: main_black, size: 30),
-          onPressed: () {},
+          style: TextStyle(color: isOnline ? const Color.fromARGB(206, 144, 0, 255) : Colors.redAccent),
         ),
       ),
     );

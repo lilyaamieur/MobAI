@@ -3,6 +3,7 @@ import 'package:flutter_application_1/colors.dart';
 import 'package:flutter_application_1/views/screens/play/play.dart';
 import 'package:flutter_application_1/views/screens/ranking/ranking.dart';
 import 'package:flutter_application_1/views/screens/account/account_usual.dart';
+import 'package:flutter_application_1/home.dart';
 
 
 class BottomNavBar extends StatelessWidget {
@@ -23,8 +24,12 @@ class BottomNavBar extends StatelessWidget {
       case 1:
         nextScreen = FriendsScreen();
         break;
-      case 2:
+      case 3:
         nextScreen = Account();
+        break;
+
+      case 2:
+        nextScreen = Home();
         break;
       default:
         return;
@@ -57,9 +62,15 @@ class BottomNavBar extends StatelessWidget {
           label: "Friends",
         ),
         BottomNavigationBarItem(
+          icon: Icon(Icons.leaderboard),
+          label: "Leaderboard",
+        ),
+
+        BottomNavigationBarItem(
           icon: Icon(Icons.person),
           label: "Account",
         ),
+
       ],
     );
   }

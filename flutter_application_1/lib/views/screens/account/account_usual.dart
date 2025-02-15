@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/colors.dart';
+import 'package:flutter_application_1/sign_in.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 import 'package:flutter_application_1/views/widgets/navBar.dart';
 import 'package:image_picker/image_picker.dart'; // For profile picture updates
+import 'package:flutter_application_1/sign_in.dart';
+
+
 
 class Account extends StatefulWidget {
   const Account({Key? key}) : super(key: key);
@@ -24,6 +28,13 @@ class _AccountState extends State<Account> {
   void initState() {
     super.initState();
     fetchUserData();
+  }
+
+  Future<void> updateAccountStatus(String usermail, String status) async {
+    final supabase = Supabase.instance.client;
+    await supabase
+        .from('Account')
+        .update({'status': status}).eq('email', usermail);
   }
 
   Future<void> fetchUserData() async {
@@ -49,7 +60,8 @@ class _AccountState extends State<Account> {
         });
       } else {
         setState(() {
-          usernameController.text = accountResponse['user_name'] ?? "Undetermined";
+          usernameController.text =
+              accountResponse['user_name'] ?? "Undetermined";
           bioController.text = accountResponse['bio'] ?? "Undetermined";
         });
       }
@@ -73,8 +85,12 @@ class _AccountState extends State<Account> {
         await supabase.from('Account').insert({
           'id': uuid.v4(),
           'email': user.email,
-          'user_name': usernameController.text.isNotEmpty ? usernameController.text : "New User",
-          'bio': bioController.text.isNotEmpty ? bioController.text : "Hello, I'm new here!",
+          'user_name': usernameController.text.isNotEmpty
+              ? usernameController.text
+              : "New User",
+          'bio': bioController.text.isNotEmpty
+              ? bioController.text
+              : "Hello, I'm new here!",
         });
       } else {
         await supabase.from('Account').update({
@@ -94,13 +110,29 @@ class _AccountState extends State<Account> {
     }
   }
 
-  void logout() {
-    supabase.auth.signOut();
-    Navigator.of(context).pushReplacementNamed('/');
-  }
+
+    void navigateToMainScreen2(AuthResponse response) async {
+      final usermail = response.user?.email ?? '';
+      await updateAccountStatus(usermail, 'OFFLINE'); // ✅ Ensures status update
+      Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context) => SignUp()));
+    }
+
+    void logout() async {
+      final user = supabase.auth.currentUser;
+      if (user != null) {
+        await updateAccountStatus(user.email!, "OFFLINE"); // ✅ Update status before logout
+      }
+
+      await supabase.auth.signOut(); // ✅ Properly logs out user
+      Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context) => SignUp()));
+    }
+
+
+
 
   Future<void> pickImage() async {
-    final pickedFile = await ImagePicker().pickImage(source: ImageSource.gallery);
+    final pickedFile =
+        await ImagePicker().pickImage(source: ImageSource.gallery);
     if (pickedFile != null) {
       setState(() {
         profileImage = pickedFile.path;
@@ -117,7 +149,8 @@ class _AccountState extends State<Account> {
         centerTitle: true,
         title: Text(
           "Account",
-          style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white),
+          style: TextStyle(
+              fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white),
         ),
       ),
       body: SingleChildScrollView(
@@ -139,7 +172,8 @@ class _AccountState extends State<Account> {
                   ),
                   Container(
                     padding: EdgeInsets.all(6),
-                    decoration: BoxDecoration(color: main_green, shape: BoxShape.circle),
+                    decoration: BoxDecoration(
+                        color: main_green, shape: BoxShape.circle),
                     child: Icon(Icons.edit, color: Colors.white, size: 22),
                   ),
                 ],
@@ -175,7 +209,8 @@ class _AccountState extends State<Account> {
   }
 
   // Custom Input Field Widget
-  Widget buildInputField(String hint, TextEditingController controller, {int maxLines = 1}) {
+  Widget buildInputField(String hint, TextEditingController controller,
+      {int maxLines = 1}) {
     return TextField(
       controller: controller,
       maxLines: maxLines,
@@ -206,11 +241,13 @@ class _AccountState extends State<Account> {
         style: ElevatedButton.styleFrom(
           backgroundColor: color,
           padding: EdgeInsets.symmetric(vertical: 15),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
         ),
         child: Text(
           text,
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+          style: TextStyle(
+              fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
         ),
       ),
     );
