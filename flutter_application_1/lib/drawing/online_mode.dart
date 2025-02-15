@@ -17,7 +17,7 @@ class _OnlineModeState extends State<OnlineMode> {
   final SupabaseClient supabase = Supabase.instance.client;
   String gameId = "";
   String userId = "";
-  String prompt = "apple";
+  late String prompt = "";
   bool isGameStarted = false;
   Timer? _gameTimer;
   Timer? _pollingTimer;
@@ -48,14 +48,14 @@ class _OnlineModeState extends State<OnlineMode> {
   }
 
   Future<void> fetchPromptAndMatch() async {
-    final response = await http.get(Uri.parse("http://127.0.0.1:5005/get_word?user_id=$userId"));
+    final response = await http
+        .get(Uri.parse("http://127.0.0.1:5005/get_word?user_id=$userId"));
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
       setState(() {
         prompt = data['label'];
       });
     }
-    findOrCreateGame();
   }
 
   Future<void> findOrCreateGame() async {
@@ -66,28 +66,36 @@ class _OnlineModeState extends State<OnlineMode> {
         .limit(1)
         .maybeSingle();
 
-    int level_1 = supabase.auth.currentUser!.userMetadata!["level"];
+    //int level_1 = supabase.auth.currentUser!.userMetadata!["level"];
 
     if (response != null) {
       gameId = response["id"];
-      final response_1 = await supabase.from("games").select("player1_id").eq("id", gameId).single();
-      final response_2 = await supabase.from("auth.users").select("level").eq("id", response_1["player1_id"]).single(); 
+      //final response_1 = await supabase.from("games").select("player1_id").eq("id", gameId).single();
+      //final response_2 = await supabase.from("auth.users").select("level").eq("id", response_1["player1_id"]).single();
 
-      int level_2 = response_2["level"];
+      //int level_2 = response_2["level"];
 
-      if (level_1 <= level_2 + 1 && level_1 >= level_2 - 1) {
-        await supabase.from("games").update(
+      //if (level_1 <= level_2 + 1 && level_1 >= level_2 - 1) {
+      final response_3 = await supabase
+          .from("games")
+          .select("prompt")
+          .eq("id", gameId)
+          .single();
+      prompt = response_3["prompt"];
+      print("prompt: $prompt");
+      await supabase.from("games").update(
           {"player2_id": userId, "status": "in_progress"}).eq("id", gameId);
-      }
-      else {
-        gameId = const Uuid().v4();
-        await supabase.from("games").insert({
-          "id": gameId,
-          "prompt": prompt,
-          "player1_id": userId,
-          "status": "waiting"
-        });
-      }
+
+      //}
+      // else {
+      //   gameId = const Uuid().v4();
+      //   await supabase.from("games").insert({
+      //     "id": gameId,
+      //     "prompt": prompt,
+      //     "player1_id": userId,
+      //     "status": "waiting"
+      //   });
+      // }
     } else {
       gameId = const Uuid().v4();
       await supabase.from("games").insert({
@@ -237,11 +245,23 @@ class _OnlineModeState extends State<OnlineMode> {
       player1Accuracy = guessedAccuracy;
       player1GuessTime = guessTime;
 
-      await supabase.from("games").update({
-        "player1_drawing": base64Image,
-        "player1_guessed_time": guessTime,
-        "player1_accuracy": guessedAccuracy
-      }).eq("id", gameId);
+      if (guessedCategory!.toLowerCase() == prompt.toLowerCase()) {
+        await supabase.from("games").update({
+          "player1_drawing": base64Image,
+          "player1_guessed_time": guessTime,
+          "player1_accuracy": guessedAccuracy,
+          "answer_1": "success",
+          "status": "finished"
+        }).eq("id", gameId);
+      } else {
+        await supabase.from("games").update({
+          "player1_drawing": base64Image,
+          "player1_guessed_time": guessTime,
+          "player1_accuracy": 0,
+          "answer_1": "fail",
+          "status": "finished"
+        }).eq("id", gameId);
+      }
 
       final res = await supabase
           .from("games")
@@ -269,6 +289,14 @@ class _OnlineModeState extends State<OnlineMode> {
       player1GuessTime = res[0]["player1_guessed_time"];
     }
 
+    try {
+      await updateUserLevel(guessedCategory!.toLowerCase() == prompt.toLowerCase(),
+        guessTime!, guessedAccuracy);
+    }
+    catch (e) {
+      print("Error updating user level : $e");
+    }
+
     stopwatch.stop();
     _gameTimer?.cancel();
   }
@@ -291,6 +319,28 @@ class _OnlineModeState extends State<OnlineMode> {
 
     print(player1GuessTime);
     print(player2GuessTime);
+  }
+
+  Future<void> updateUserLevel(
+      bool success, int timeTaken, double accuracy) async {
+    final response = await http.post(
+      Uri.parse("http://127.0.0.1:5005/update_proficiency"),
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({
+        "user_id": userId,
+        "success": success,
+        "time_taken": timeTaken,
+        "accuracy": accuracy
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      int newLevel = data['new_proficiency'];
+      await supabase.from("auth.users").update({
+        "metadata": {"level": newLevel}
+      }).eq("id", userId);
+    }
   }
 
   @override
