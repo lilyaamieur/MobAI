@@ -17,7 +17,7 @@ class _OnlineModeState extends State<OnlineMode> {
   final SupabaseClient supabase = Supabase.instance.client;
   String gameId = "";
   String userId = "";
-  String prompt = "apple";
+  String prompt = "Draw a House";
   bool isGameStarted = false;
   Timer? _gameTimer;
   Timer? _pollingTimer;
@@ -118,9 +118,7 @@ class _OnlineModeState extends State<OnlineMode> {
         });
 
         if (player1Drawing != null && player2Drawing != null) {
-          setState(() {
-            isGameStarted = false;
-          });
+          determineWinner();
         }
       }
     });
@@ -191,15 +189,29 @@ class _OnlineModeState extends State<OnlineMode> {
     if (userId == player1Id) {
       await supabase.from("games").update({
         "player1_drawing": base64Image,
+        "player1_guess_word": guessedCategory,
+        "player1_accuracy": guessedAccuracy * 100,
+        "player1_guess_time": guessTime,
       }).eq("id", gameId);
     } else {
       await supabase.from("games").update({
         "player2_drawing": base64Image,
+        "player2_guess_word": guessedCategory,
+        "player2_accuracy": guessedAccuracy * 100,
+        "player2_guess_time": guessTime,
       }).eq("id", gameId);
     }
 
     stopwatch.stop();
     _gameTimer?.cancel();
+  }
+
+  void determineWinner() {
+    if (player1GuessTime != null && player2GuessTime != null) {
+      setState(() {
+        isGameStarted = false;
+      });
+    }
   }
 
   @override
@@ -216,17 +228,22 @@ class _OnlineModeState extends State<OnlineMode> {
       appBar: AppBar(title: Text("Online Mode: Draw $prompt")),
       body: Column(
         children: [
-          if (!hasSubmitted)
-            Text("Time Left: $timeLeft seconds",
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+          Text("Time Left: $timeLeft seconds",
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
           Expanded(
             child: DrawingBoard(
               controller: _controller,
-              background: Container(color: Colors.white),
+              background: Container(
+                color: Colors.white,
+                width: MediaQuery.of(context).size.width,
+                height: MediaQuery.of(context).size.width,
+              ),
               showDefaultActions: true,
               showDefaultTools: true,
             ),
           ),
+          Text("AI Prediction: ${guessedCategory ?? "Waiting..."}",
+              style: TextStyle(fontSize: 18)),
           ElevatedButton(
             onPressed: submitDrawing,
             child: Text(hasSubmitted ? "Submitted!" : "Submit Drawing"),
@@ -241,7 +258,6 @@ class _OnlineModeState extends State<OnlineMode> {
                     Text("Player 1: $player1GuessWord"),
                     Text("Accuracy: ${player1Accuracy.toStringAsFixed(2)}%"),
                     Text("Time: ${player1GuessTime}s"),
-                    Image.memory(base64Decode(player1Drawing!), width: 100, height: 100),
                   ],
                 ),
                 Column(
@@ -249,7 +265,6 @@ class _OnlineModeState extends State<OnlineMode> {
                     Text("Player 2: $player2GuessWord"),
                     Text("Accuracy: ${player2Accuracy.toStringAsFixed(2)}%"),
                     Text("Time: ${player2GuessTime}s"),
-                    Image.memory(base64Decode(player2Drawing!), width: 100, height: 100),
                   ],
                 ),
               ],
