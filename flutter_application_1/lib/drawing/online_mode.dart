@@ -56,10 +56,8 @@ class _OnlineModeState extends State<OnlineMode> {
 
     if (response != null) {
       gameId = response["id"];
-      await supabase.from("games").update({
-        "player2_id": userId,
-        "status": "in_progress"
-      }).eq("id", gameId);
+      await supabase.from("games").update(
+          {"player2_id": userId, "status": "in_progress"}).eq("id", gameId);
     } else {
       gameId = const Uuid().v4();
       await supabase.from("games").insert({
@@ -75,7 +73,8 @@ class _OnlineModeState extends State<OnlineMode> {
 
   void pollForPlayer2() {
     _pollingTimer = Timer.periodic(Duration(seconds: 2), (timer) async {
-      var response = await supabase.from("games").select().eq("id", gameId).single();
+      var response =
+          await supabase.from("games").select().eq("id", gameId).single();
 
       if (!mounted) return;
 
@@ -98,26 +97,26 @@ class _OnlineModeState extends State<OnlineMode> {
         .stream(primaryKey: ["id"])
         .eq("id", gameId)
         .listen((data) {
-      if (data.isNotEmpty) {
-        var gameData = data[0];
-        print(gameData);
-        if (!mounted) return;
+          if (data.isNotEmpty) {
+            var gameData = data[0];
+            print(gameData);
+            if (!mounted) return;
 
-        setState(() {
-          prompt = gameData["prompt"];
-          player1Drawing = gameData["player1_drawing"];
-          player2Drawing = gameData["player2_drawing"];
-          player1GuessTime = gameData["player1_guessed_time"];
-          player2GuessTime = gameData["player2_guessed_time"];
-          player1Accuracy = gameData["player1_accuracy"];
-          player2Accuracy = gameData["player2_accuracy"];
+            setState(() {
+              prompt = gameData["prompt"];
+              player1Drawing = gameData["player1_drawing"];
+              player2Drawing = gameData["player2_drawing"];
+              player1GuessTime = gameData["player1_guessed_time"];
+              player2GuessTime = gameData["player2_guessed_time"];
+              player1Accuracy = gameData["player1_accuracy"];
+              player2Accuracy = gameData["player2_accuracy"];
+            });
+
+            if (player1Drawing != null && player2Drawing != null) {
+              determineWinner();
+            }
+          }
         });
-
-        if (player1Drawing != null && player2Drawing != null) {
-          determineWinner();
-        }
-      }
-    });
 
     startSubmissionChecker();
   }
@@ -145,7 +144,8 @@ class _OnlineModeState extends State<OnlineMode> {
 
   void startSubmissionChecker() {
     _checkSubmissionTimer = Timer.periodic(Duration(seconds: 2), (timer) async {
-      var response = await supabase.from("games").select().eq("id", gameId).single();
+      var response =
+          await supabase.from("games").select().eq("id", gameId).single();
 
       if (!mounted) return;
 
@@ -208,12 +208,16 @@ class _OnlineModeState extends State<OnlineMode> {
         "player1_guessed_time": guessTime,
         "player1_accuracy": guessedAccuracy
       }).eq("id", gameId);
+      player1Accuracy = guessedAccuracy;
+      player1GuessTime = guessTime;
     } else {
       await supabase.from("games").update({
         "player2_drawing": base64Image,
         "player2_guessed_time": guessTime,
         "player2_accuracy": guessedAccuracy
       }).eq("id", gameId);
+      player2Accuracy = guessedAccuracy;
+      player2GuessTime = guessTime;
     }
 
     stopwatch.stop();
@@ -228,6 +232,8 @@ class _OnlineModeState extends State<OnlineMode> {
         } else {
           isWinner = player2GuessTime! < player1GuessTime!;
         }
+        print(player1GuessTime.toString() + player2GuessTime.toString());
+        print("is winner : " + isWinner.toString());
       });
     }
   }
@@ -263,8 +269,8 @@ class _OnlineModeState extends State<OnlineMode> {
           ),
           Text("AI Prediction: ${guessedCategory ?? "Waiting..."}",
               style: TextStyle(fontSize: 18)),
-          //Text("Accuracy: ${(guessedAccuracy * 100).toStringAsFixed(2)}%",
-            //  style: TextStyle(fontSize: 18)),
+          Text("Accuracy: ${(guessedAccuracy * 100).toStringAsFixed(2)}%",
+              style: TextStyle(fontSize: 18)),
           ElevatedButton(
             onPressed: submitDrawing,
             child: Text(hasSubmitted ? "Submitted!" : "Submit Drawing"),
@@ -278,8 +284,8 @@ class _OnlineModeState extends State<OnlineMode> {
                     Text("Player 1"),
                     Image.memory(base64Decode(player1Drawing!),
                         width: 100, height: 100),
-                    Text("Accuracy: ${(player1Accuracy! * 100).toStringAsFixed(2)}%",
-                      style: TextStyle(fontSize: 18)),
+                    //Text("Accuracy: ${(player1Accuracy! * 100).toStringAsFixed(2)}%",
+                    //style: TextStyle(fontSize: 18)),
                   ],
                 ),
                 Column(
@@ -287,8 +293,8 @@ class _OnlineModeState extends State<OnlineMode> {
                     Text("Player 2"),
                     Image.memory(base64Decode(player2Drawing!),
                         width: 100, height: 100),
-                    Text("Accuracy: ${(player2Accuracy! * 100).toStringAsFixed(2)}%",
-                      style: TextStyle(fontSize: 18)),
+                    // Text("Accuracy: ${(player2Accuracy! * 100).toStringAsFixed(2)}%",
+                    // style: TextStyle(fontSize: 18)),
                   ],
                 ),
               ],
