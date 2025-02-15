@@ -42,7 +42,7 @@ class _OnlineModeState extends State<OnlineMode> {
   void initState() {
     super.initState();
     userId = supabase.auth.currentUser!.id;
-   fetchPromptAndMatch();
+    fetchPromptAndMatch();
     findOrCreateGame();
     _controller.addListener(_onStroke);
   }
@@ -74,7 +74,6 @@ class _OnlineModeState extends State<OnlineMode> {
       //final response_2 = await supabase.from("auth.users").select("level").eq("id", response_1["player1_id"]).single();
 
       //int level_2 = response_2["level"];
-
 
       //if (level_1 <= level_2 + 1 && level_1 >= level_2 - 1) {
       final response_3 = await supabase
@@ -301,13 +300,17 @@ class _OnlineModeState extends State<OnlineMode> {
     }
 
     try {
-      await updateUserLevel(guessedCategory!.toLowerCase() == prompt.toLowerCase(),
-        guessTime!, guessedAccuracy);
-    }
-    catch (e) {
+      await updateUserLevel(
+          guessedCategory!.toLowerCase() == prompt.toLowerCase(),
+          guessTime!,
+          guessedAccuracy);
+    } catch (e) {
       print("Error updating user level : $e");
     }
 
+    final response = await supabase.auth.currentUser!.userMetadata!;
+    int newLevel = response["level"];
+    print("new level: $newLevel");
 
     stopwatch.stop();
     _gameTimer?.cancel();
@@ -333,7 +336,8 @@ class _OnlineModeState extends State<OnlineMode> {
     print(player2GuessTime);
   }
 
-  Future<void> updateUserLevel(bool success, int timeTaken, double accuracy) async {
+  Future<void> updateUserLevel(
+      bool success, int timeTaken, double accuracy) async {
     final response = await http.post(
       Uri.parse("http://127.0.0.1:5005/update_proficiency"),
       headers: {"Content-Type": "application/json"},
