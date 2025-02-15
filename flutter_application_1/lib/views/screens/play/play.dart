@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/colors.dart';
 import 'package:flutter_application_1/drawing/offline_mode.dart';
-//import 'package:flutter_application_1/drawing/online_mode.dart';
+//import 'package:flutter_application_1/drawing/offline_mode.dart';
+import 'package:flutter_application_1/drawing/online_mode.dart';
 import 'package:flutter_application_1/views/widgets/navBar.dart';
 
 class Play extends StatefulWidget {
@@ -42,11 +43,11 @@ class _PlayState extends State<Play> {
           Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              _buildButton("Start Game", () => print("Start Game Pressed")),
+              _buildButton("Online Game", () => print("Online Game Pressed")),
               SizedBox(height: 20), // Space between buttons
-              _buildButton("Leaderboard", () => print("Leaderboard Pressed")),
+              _buildButton("Offline Game", () => print("offline Game Pressed")),
               SizedBox(height: 20),
-              _buildButton("Settings", () => print("Settings Pressed")),
+              _buildButton("Join Loby", () => print("Join Loby")),
             ],
           ),
         ],
@@ -61,7 +62,10 @@ class _PlayState extends State<Play> {
       width: 250, // Ensures all buttons have the same width
       child: ElevatedButton(
         onPressed: () {
-          Navigator.push(context, MaterialPageRoute(builder: (context) => OfflineMode()));
+          if (text == "Offline Game")
+            Navigator.push(context, MaterialPageRoute(builder: (context) => OfflineMode()));
+          else if (text == "Online Game")
+            Navigator.push(context, MaterialPageRoute(builder: (context) => OnlineMode()));
         },
         style: ElevatedButton.styleFrom(
           backgroundColor: main_green,

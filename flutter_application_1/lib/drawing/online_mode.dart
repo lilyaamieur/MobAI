@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_drawing_board/flutter_drawing_board.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:http/http.dart' as http;
 import 'package:uuid/uuid.dart';
 
 class OnlineMode extends StatefulWidget {
@@ -21,18 +22,26 @@ class _OnlineModeState extends State<OnlineMode> {
   Timer? _gameTimer;
   Timer? _pollingTimer;
   Timer? _checkSubmissionTimer;
-  int timeLeft = 60; // 1-minute timer
+  int timeLeft = 60;
   bool hasSubmitted = false;
   String? player1Drawing;
   String? player2Drawing;
   String? player1Id;
   String? player2Id;
+  String? guessedCategory;
+  double guessedAccuracy = 0.0;
+  int? guessTime;
+  int? player1GuessTime;
+  int? player2GuessTime;
+  bool isWinner = false;
+  Stopwatch stopwatch = Stopwatch();
 
   @override
   void initState() {
     super.initState();
     userId = supabase.auth.currentUser!.id;
     findOrCreateGame();
+    _controller.addListener(_onStroke);
   }
 
   Future<void> findOrCreateGame() async {
@@ -59,7 +68,7 @@ class _OnlineModeState extends State<OnlineMode> {
       });
     }
 
-    pollForPlayer2(); // Start polling until the second player joins
+    pollForPlayer2();
   }
 
   void pollForPlayer2() {
@@ -74,7 +83,7 @@ class _OnlineModeState extends State<OnlineMode> {
       });
 
       if (player1Id != null && player2Id != null) {
-        timer.cancel(); // Stop polling when the second player joins
+        timer.cancel();
         listenToGameUpdates();
         startTimer();
       }
@@ -96,22 +105,25 @@ class _OnlineModeState extends State<OnlineMode> {
           prompt = gameData["prompt"];
           player1Drawing = gameData["player1_drawing"];
           player2Drawing = gameData["player2_drawing"];
+          player1GuessTime = gameData["player1_guess_time"];
+          player2GuessTime = gameData["player2_guess_time"];
         });
 
-        // Stop the submission check once both drawings are submitted
         if (player1Drawing != null && player2Drawing != null) {
-          _checkSubmissionTimer?.cancel();
+          determineWinner();
         }
       }
     });
 
-    startSubmissionChecker(); // Start checking if both drawings are submitted
+    startSubmissionChecker();
   }
 
   void startTimer() {
     setState(() {
       isGameStarted = true;
     });
+
+    stopwatch.start();
 
     _gameTimer = Timer.periodic(Duration(seconds: 1), (timer) {
       if (timeLeft > 0) {
@@ -139,9 +151,43 @@ class _OnlineModeState extends State<OnlineMode> {
       });
 
       if (player1Drawing != null && player2Drawing != null) {
-        timer.cancel(); // Stop checking once both drawings are submitted
+        timer.cancel();
+        determineWinner();
       }
     });
+  }
+
+  Future<void> _onStroke() async {
+    if (hasSubmitted) return;
+
+    List<Map<String, dynamic>> jsonData = _controller.getJsonList();
+    String jsonPayload = JsonEncoder.withIndent('  ').convert(jsonData);
+
+    var response = await http.post(
+      Uri.parse("http://127.0.0.1:5001/predict"),
+      headers: {"Content-Type": "application/json"},
+      body: jsonPayload,
+    );
+
+    if (response.statusCode == 200) {
+      Map<String, dynamic> data = jsonDecode(response.body);
+      List predictions = data["predictions"];
+
+      if (predictions.isNotEmpty) {
+        String guessedWord = predictions[0]["category"];
+        double accuracy = predictions[0]["probability"];
+
+        setState(() {
+          guessedCategory = guessedWord;
+          guessedAccuracy = accuracy;
+          guessTime = stopwatch.elapsedMilliseconds ~/ 1000;
+        });
+
+        if (guessedWord.toLowerCase() == prompt.toLowerCase()) {
+          submitDrawing();
+        }
+      }
+    }
   }
 
   Future<void> submitDrawing() async {
@@ -155,14 +201,25 @@ class _OnlineModeState extends State<OnlineMode> {
     if (userId == player1Id) {
       await supabase.from("games").update({
         "player1_drawing": base64Image,
+        "player1_guess_time": guessTime,
       }).eq("id", gameId);
     } else {
       await supabase.from("games").update({
         "player2_drawing": base64Image,
+        "player2_guess_time": guessTime,
       }).eq("id", gameId);
     }
 
+    stopwatch.stop();
     _gameTimer?.cancel();
+  }
+
+  void determineWinner() {
+    if (player1GuessTime != null && player2GuessTime != null) {
+      setState(() {
+        isWinner = player1GuessTime! < player2GuessTime!;
+      });
+    }
   }
 
   @override
@@ -170,62 +227,38 @@ class _OnlineModeState extends State<OnlineMode> {
     _gameTimer?.cancel();
     _pollingTimer?.cancel();
     _checkSubmissionTimer?.cancel();
+    _controller.removeListener(_onStroke);
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Online Mode: $prompt")),
+      appBar: AppBar(title: Text("Online Mode: Draw $prompt")),
       body: Column(
         children: [
-          if (player2Id == null) ...[
-            Text("Waiting for another player..."),
-          ] else ...[
-            Text("Time Left: $timeLeft seconds",
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-            Expanded(
-              child: DrawingBoard(
-                controller: _controller,
-                background: Container(
-                  color: Colors.white,
-                  width: MediaQuery.of(context).size.width,
-                  height: MediaQuery.of(context).size.width,  
-                ),
-                showDefaultActions: true,
-                showDefaultTools: true,
+          Text("Time Left: $timeLeft seconds",
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+          Expanded(
+            child: Container(
+                color: Colors.white,
+                width: MediaQuery.of(context).size.width,
+                height: MediaQuery.of(context).size.width,
               ),
-            ),
-            ElevatedButton(
-              onPressed: submitDrawing,
-              child: Text(hasSubmitted ? "Submitted!" : "Submit Drawing"),
-            ),
-          ],
+          ),
+          Text("AI Prediction: ${guessedCategory ?? "Waiting..."}",
+              style: TextStyle(fontSize: 18)),
+          Text("Accuracy: ${(guessedAccuracy * 100).toStringAsFixed(2)}%",
+              style: TextStyle(fontSize: 18)),
+          ElevatedButton(
+            onPressed: submitDrawing,
+            child: Text(hasSubmitted ? "Submitted!" : "Submit Drawing"),
+          ),
           if (player1Drawing != null && player2Drawing != null) ...[
-            SizedBox(height: 20),
-            Text("Game Over!"),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                Column(
-                  children: [
-                    Text("Player 1"),
-                    Image.memory(base64Decode(player1Drawing!),
-                        width: 100, height: 100),
-                    Text("Score: 75"),
-                  ],
-                ),
-                Column(
-                  children: [
-                    Text("Player 2"),
-                    Image.memory(base64Decode(player2Drawing!),
-                        width: 100, height: 100),
-                    Text("Score: 80"),
-                  ],
-                ),
-              ],
-            ),
-          ]
+            Text(isWinner ? "You Won!" : "You Lost!",
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+            Text("Time to Guess: ${guessTime}s"),
+          ],
         ],
       ),
     );
