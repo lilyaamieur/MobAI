@@ -1,3 +1,5 @@
+// ignore_for_file: unnecessary_null_comparison
+
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/colors.dart';
 import 'package:flutter_application_1/views/widgets/navBar.dart';
@@ -25,87 +27,115 @@ class _FriendsScreenState extends State<FriendsScreen> {
     fetchFriendRequests();
   }
 
-  Future<void> fetchFriends() async {
-  final user = supabase.auth.currentUser;
-  if (user == null) return;
-
-  final accountResponse = await supabase
-      .from('Account')
-      .select('id')
-      .eq('email', user.email!)
-      .maybeSingle();
-
-  if (accountResponse == null) return;
-
-  final String accountId = accountResponse['id'].toString();
-
-  final friendIdsResponse = await supabase
-      .from('friends')
-      .select('friend_id')
-      .eq('user_id', accountId)
-      .eq('status', 'accepted');
-
-  List<Map<String, dynamic>> friendList = [];
-  for (var friend in friendIdsResponse) {
-    final accountData = await supabase
+  Future<void> searchFriend() async {
+    final response = await supabase
         .from('Account')
-        .select('id, user_name, status') // ✅ Fetch status
-        .eq('id', friend['friend_id'])
-        .maybeSingle();
-    if (accountData != null) {
-      friendList.add(accountData);
+        .select('user_name')
+        .eq('user_name', searchController.text.trim())
+        .single()
+        ;
+
+    if (response != null || response == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("User not found")),
+      );
+      return;
+    }
+
+    final friendId = response['id'];
+    sendFriendRequest(friendId);
+  }
+
+  Future<void> sendFriendRequest(String friendId) async {
+    final user = supabase.auth.currentUser;
+    if (user == null) return;
+
+    final userResponse = await supabase
+        .from('Account')
+        .select('id')
+        .eq('user_id', user.id)
+        .single()
+        ;
+
+    if (userResponse != null || userResponse == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error fetching your account ID")),
+      );
+      return;
+    }
+
+    final userId = userResponse['id'];
+    final response = await supabase.from('friends').insert({
+      'user_id': userId,
+      'friend_id': friendId,
+      'status': 'pending',
+    });
+
+    if (response.error == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Friend request sent!")),
+      );
     }
   }
 
-  if (mounted) {
-    setState(() {
-      friends = friendList;
-    });
+  Future<void> fetchFriends() async {
+    final user = supabase.auth.currentUser;
+    if (user == null) return;
+
+    final userResponse = await supabase
+        .from('Account')
+        .select('id')
+        .eq('user_id', user.id)
+        .single()
+        ;
+
+    if (userResponse != null || userResponse == null) {
+      return;
+    }
+
+    final userId = userResponse['id'];
+    final response = await supabase
+        .from('friends')
+        .select('friend_id, status')
+        .or('user_id.eq.$userId,friend_id.eq.$userId')
+        .eq('status', 'accepted')
+        ;
+
+    if (response == null) {
+      setState(() {
+        friends = response;
+      });
+    }
   }
-}
 
   Future<void> fetchFriendRequests() async {
     final user = supabase.auth.currentUser;
     if (user == null) return;
 
-    final accountResponse = await supabase
+    final userResponse = await supabase
         .from('Account')
         .select('id')
-        .eq('email', user.email!)
-        .maybeSingle();
+        .eq('user_id', user.id)
+        .single()
+        ;
 
-    if (accountResponse == null) return;
-    final String accountId = accountResponse['id'].toString();
-
-    final receivedResponse = await supabase
-        .from('friends')
-        .select('user_id')
-        .eq('friend_id', accountId)
-        .eq('status', 'pending');
-
-    List<Map<String, dynamic>> receivedRequests = [];
-    for (var request in receivedResponse) {
-      final accountData = await supabase
-          .from('Account')
-          .select('id, user_name')
-          .eq('id', request['user_id'])
-          .maybeSingle();
-      if (accountData != null) {
-        receivedRequests.add(accountData);
-      }
+    if (userResponse != null || userResponse == null) {
+      return;
     }
 
-    if (mounted) {
+    final userId = userResponse['id'];
+    final response = await supabase
+        .from('friends')
+        .select('id, user_id')
+        .eq('friend_id', userId)
+        .eq('status', 'pending')
+        ;
+
+    if (response == null) {
       setState(() {
-        friendRequests = receivedRequests;
+        friendRequests = response;
       });
     }
-  }
-
-  Future<void> updateRequestStatus(String userId, String status) async {
-    await supabase.from('friends').update({'status': status}).match({'user_id': userId});
-    fetchFriends();
-    fetchFriendRequests();
   }
 
   @override
@@ -114,11 +144,7 @@ class _FriendsScreenState extends State<FriendsScreen> {
       backgroundColor: main_black,
       appBar: AppBar(
         backgroundColor: main_black,
-        title: const Text(
-          "Friends",
-          style: TextStyle(
-              fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
-        ),
+        title: Text("Friends", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white)),
         centerTitle: true,
       ),
       body: Padding(
@@ -128,9 +154,9 @@ class _FriendsScreenState extends State<FriendsScreen> {
             TextField(
               controller: searchController,
               decoration: InputDecoration(
-                prefixIcon: const Icon(Icons.search, color: main_green),
+                prefixIcon: Icon(Icons.search, color: main_green),
                 hintText: "Username",
-                hintStyle: const TextStyle(color: Colors.white70),
+                hintStyle: TextStyle(color: Colors.white70),
                 filled: true,
                 fillColor: Colors.black54,
                 border: OutlineInputBorder(
@@ -138,46 +164,46 @@ class _FriendsScreenState extends State<FriendsScreen> {
                   borderSide: BorderSide.none,
                 ),
               ),
-              style: const TextStyle(color: Colors.white),
+              style: TextStyle(color: Colors.white),
             ),
-            const Divider(color: Colors.white24),
-            const Text("Friend Requests", style: TextStyle(color: Colors.white)),
+            IconButton(
+              icon: Icon(Icons.person_add, color: main_green),
+              onPressed: searchFriend,
+            ),
+            Divider(color: Colors.white24),
+            Text("Friend Requests", style: TextStyle(color: Colors.white)),
             friendRequests.isEmpty
-                ? const Text("No pending requests",
-                    style: TextStyle(color: Colors.white70))
+                ? Text("No pending requests", style: TextStyle(color: Colors.white70))
                 : Column(
                     children: friendRequests.map((request) {
                       return ListTile(
-                        title: Text(request['user_name'],
-                            style: const TextStyle(color: Colors.white)),
+                        title: Text(request['user_id'], style: TextStyle(color: Colors.white)),
                         trailing: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             IconButton(
-                              icon: const Icon(Icons.check, color: Colors.green),
-                              onPressed: () => updateRequestStatus(request['id'], 'accepted'),
+                              icon: Icon(Icons.check, color: Colors.green),
+                              onPressed: () {},
                             ),
                             IconButton(
-                              icon: const Icon(Icons.close, color: Colors.red),
-                              onPressed: () => updateRequestStatus(request['id'], 'rejected'),
+                              icon: Icon(Icons.close, color: Colors.red),
+                              onPressed: () {},
                             ),
                           ],
                         ),
                       );
                     }).toList(),
                   ),
-            const Divider(color: Colors.white24),
-            const Text("Your Friends", style: TextStyle(color: Colors.white)),
+            Divider(color: Colors.white24),
+            Text("Your Friends", style: TextStyle(color: Colors.white)),
             Expanded(
               child: friends.isEmpty
-                  ? const Center(
-                      child: Text("No friends yet",
-                          style: TextStyle(color: Colors.white70)))
+                  ? Center(child: Text("No friends yet", style: TextStyle(color: Colors.white70)))
                   : ListView.builder(
                       itemCount: friends.length,
                       itemBuilder: (context, index) {
-                        return FriendTile(
-                            name: friends[index]['user_name'], status: friends[index]['status']);
+                        final friend = friends[index];
+                        return FriendTile(name: friend['friend_id'], status: "Online");
                       },
                     ),
             ),

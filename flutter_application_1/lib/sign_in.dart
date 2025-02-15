@@ -5,47 +5,37 @@ import 'package:flutter_application_1/home.dart';
 import 'package:flutter_application_1/supabase_auth_ui.dart';
 import 'package:flutter_application_1/colors.dart';
 import 'constants.dart';
-import 'package:flutter_application_1/home.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:flutter_application_1/views/screens/account/account.dart';
 
-class SignUp extends StatefulWidget {
+class SignUp extends StatelessWidget {
   const SignUp({Key? key}) : super(key: key);
 
   @override
-  _SignUpState createState() => _SignUpState();
-}
-
-class _SignUpState extends State<SignUp> {
-  @override
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
+  
 
-    Future<void> updateAccountStatus(String usermail, String status) async {
-      final supabase = Supabase.instance.client;
-      await supabase
-          .from('Account')
-          .update({'status': status}).eq('email', usermail);
-    }
-
-    void navigateToMainScreen2(AuthResponse response) {
-      final usermail = response.user?.email ?? '';
+  void navigateToMainScreen2(AuthResponse response) {
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
-          builder: (context) => Home(),
-        ),
-      );
-      updateAccountStatus(usermail,'ONLINE');
-    }
-
-    void navigateToMainScreen1(AuthResponse response) {
-      final userId = response.user?.id ?? '';
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(
-          builder: (context) => SignUp(),
+          builder: (context) => Home(
+          ),
         ),
       );
     }
+
+
+  
+  void navigateToMainScreen1(AuthResponse response) {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (context) => SignUp(
+          ),
+        ),
+      );
+    }
+
+
+
 
     final darkModeThemeData = ThemeData.dark().copyWith(
       colorScheme: const ColorScheme.dark(
@@ -116,7 +106,7 @@ class _SignUpState extends State<SignUp> {
               spreadRadius: 5,
               offset: Offset(0, -15), // Top glow
             ),
-            BoxShadow(
+                        BoxShadow(
               color: main_black.withOpacity(1), // Neon green glow
               blurRadius: 40,
               spreadRadius: 5,
@@ -133,7 +123,12 @@ class _SignUpState extends State<SignUp> {
         child: ListView(
           padding: const EdgeInsets.all(24.0),
           children: [
-            const SizedBox(height: 150),
+            Container(
+              width: 0.5 * screenWidth,
+              height: 0.5*screenWidth,
+              child: Image.asset('lib/images/logo.png'),
+            ),
+            const SizedBox(height: 25),
             Align(
               alignment: Alignment.center,
               child: Text(
@@ -152,8 +147,11 @@ class _SignUpState extends State<SignUp> {
                 ),
               ),
             ),
+
             const SizedBox(height: 40),
+
             spacer,
+
             Card(
               elevation: 10,
               color: const Color.fromARGB(255, 24, 24, 24),
@@ -214,6 +212,7 @@ class _SignUpState extends State<SignUp> {
                 ),
               ),
             ),
+
             spacer,
           ],
         ),

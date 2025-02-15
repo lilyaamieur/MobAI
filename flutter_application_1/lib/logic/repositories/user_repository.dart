@@ -1,3 +1,5 @@
+// ignore_for_file: unnecessary_null_comparison
+
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_application_1/data/models/user.dart';
 
