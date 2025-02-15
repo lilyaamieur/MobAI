@@ -17,7 +17,7 @@ class _OnlineModeState extends State<OnlineMode> {
   final SupabaseClient supabase = Supabase.instance.client;
   String gameId = "";
   String userId = "";
-  String prompt = "Draw a House";
+  String prompt = "apple";
   bool isGameStarted = false;
   Timer? _gameTimer;
   Timer? _pollingTimer;
@@ -191,16 +191,10 @@ class _OnlineModeState extends State<OnlineMode> {
     if (userId == player1Id) {
       await supabase.from("games").update({
         "player1_drawing": base64Image,
-        "player1_guess_word": guessedCategory,
-        "player1_accuracy": guessedAccuracy * 100,
-        "player1_guess_time": guessTime,
       }).eq("id", gameId);
     } else {
       await supabase.from("games").update({
         "player2_drawing": base64Image,
-        "player2_guess_word": guessedCategory,
-        "player2_accuracy": guessedAccuracy * 100,
-        "player2_guess_time": guessTime,
       }).eq("id", gameId);
     }
 
