@@ -9,44 +9,43 @@ import 'package:flutter_application_1/home.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_application_1/views/screens/account/account.dart';
 
-class SignUp extends StatelessWidget {
+class SignUp extends StatefulWidget {
   const SignUp({Key? key}) : super(key: key);
 
+  @override
+  _SignUpState createState() => _SignUpState();
+}
 
-
+class _SignUpState extends State<SignUp> {
 
   @override
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
-  
 
+    Future<void> updateAccountStatus(String userId, String status) async {
+      final supabase = Supabase.instance.client;
+      await supabase
+          .from('Account')
+          .update({'status': status}).eq('id', userId);
+    }
 
-  
-
-  void navigateToMainScreen2(AuthResponse response) {
+    void navigateToMainScreen2(AuthResponse response) {
       final userId = response.user?.id ?? '';
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
-          builder: (context) => Home(
-          ),
+          builder: (context) => Home(),
         ),
       );
     }
 
-
-  
-  void navigateToMainScreen1(AuthResponse response) {
+    void navigateToMainScreen1(AuthResponse response) {
       final userId = response.user?.id ?? '';
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
-          builder: (context) => SignUp(
-          ),
+          builder: (context) => SignUp(),
         ),
       );
     }
-
-
-
 
     final darkModeThemeData = ThemeData.dark().copyWith(
       colorScheme: const ColorScheme.dark(
@@ -117,7 +116,7 @@ class SignUp extends StatelessWidget {
               spreadRadius: 5,
               offset: Offset(0, -15), // Top glow
             ),
-                        BoxShadow(
+            BoxShadow(
               color: main_black.withOpacity(1), // Neon green glow
               blurRadius: 40,
               spreadRadius: 5,
@@ -135,7 +134,6 @@ class SignUp extends StatelessWidget {
           padding: const EdgeInsets.all(24.0),
           children: [
             const SizedBox(height: 150),
-
             Align(
               alignment: Alignment.center,
               child: Text(
@@ -154,11 +152,8 @@ class SignUp extends StatelessWidget {
                 ),
               ),
             ),
-
             const SizedBox(height: 40),
-
             spacer,
-
             Card(
               elevation: 10,
               color: const Color.fromARGB(255, 24, 24, 24),
@@ -219,7 +214,6 @@ class SignUp extends StatelessWidget {
                 ),
               ),
             ),
-
             spacer,
           ],
         ),
