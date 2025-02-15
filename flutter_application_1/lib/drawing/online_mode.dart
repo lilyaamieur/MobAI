@@ -42,8 +42,20 @@ class _OnlineModeState extends State<OnlineMode> {
   void initState() {
     super.initState();
     userId = supabase.auth.currentUser!.id;
+    fetchPromptAndMatch();
     findOrCreateGame();
     _controller.addListener(_onStroke);
+  }
+
+  Future<void> fetchPromptAndMatch() async {
+    final response = await http.get(Uri.parse("http://127.0.0.1:5005/get_word?user_id=$userId"));
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      setState(() {
+        prompt = data['label'];
+      });
+    }
+    findOrCreateGame();
   }
 
   Future<void> findOrCreateGame() async {
@@ -54,10 +66,28 @@ class _OnlineModeState extends State<OnlineMode> {
         .limit(1)
         .maybeSingle();
 
+    int level_1 = supabase.auth.currentUser!.userMetadata!["level"];
+
     if (response != null) {
       gameId = response["id"];
-      await supabase.from("games").update(
+      final response_1 = await supabase.from("games").select("player1_id").eq("id", gameId).single();
+      final response_2 = await supabase.from("auth.users").select("level").eq("id", response_1["player1_id"]).single(); 
+
+      int level_2 = response_2["level"];
+
+      if (level_1 <= level_2 + 1 && level_1 >= level_2 - 1) {
+        await supabase.from("games").update(
           {"player2_id": userId, "status": "in_progress"}).eq("id", gameId);
+      }
+      else {
+        gameId = const Uuid().v4();
+        await supabase.from("games").insert({
+          "id": gameId,
+          "prompt": prompt,
+          "player1_id": userId,
+          "status": "waiting"
+        });
+      }
     } else {
       gameId = const Uuid().v4();
       await supabase.from("games").insert({
@@ -187,7 +217,8 @@ class _OnlineModeState extends State<OnlineMode> {
           guessTime = stopwatch.elapsedMilliseconds ~/ 1000;
         });
 
-        if (guessedWord.toLowerCase() == prompt.toLowerCase() && guessedAccuracy > 0.75) {
+        if (guessedWord.toLowerCase() == prompt.toLowerCase() &&
+            guessedAccuracy > 0.75) {
           submitDrawing();
         }
       }
