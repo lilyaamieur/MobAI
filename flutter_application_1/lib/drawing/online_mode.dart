@@ -17,7 +17,11 @@ class _OnlineModeState extends State<OnlineMode> {
   final SupabaseClient supabase = Supabase.instance.client;
   String gameId = "";
   String userId = "";
+<<<<<<< HEAD
   late String prompt = "";
+=======
+  late String prompt = '';
+>>>>>>> f05cd2d98a14263037cb19f99c914bc73baa13b2
   bool isGameStarted = false;
   Timer? _gameTimer;
   Timer? _pollingTimer;
@@ -42,7 +46,7 @@ class _OnlineModeState extends State<OnlineMode> {
   void initState() {
     super.initState();
     userId = supabase.auth.currentUser!.id;
-    fetchPromptAndMatch();
+   fetchPromptAndMatch();
     findOrCreateGame();
     _controller.addListener(_onStroke);
   }
@@ -56,6 +60,10 @@ class _OnlineModeState extends State<OnlineMode> {
         prompt = data['label'];
       });
     }
+<<<<<<< HEAD
+=======
+    //findOrCreateGame();
+>>>>>>> f05cd2d98a14263037cb19f99c914bc73baa13b2
   }
 
   Future<void> findOrCreateGame() async {
@@ -75,6 +83,7 @@ class _OnlineModeState extends State<OnlineMode> {
 
       //int level_2 = response_2["level"];
 
+<<<<<<< HEAD
       //if (level_1 <= level_2 + 1 && level_1 >= level_2 - 1) {
       final response_3 = await supabase
           .from("games")
@@ -95,8 +104,30 @@ class _OnlineModeState extends State<OnlineMode> {
       //     "player1_id": userId,
       //     "status": "waiting"
       //   });
+=======
+      // if (level_1 <= level_2 + 1 && level_1 >= level_2 - 1) {
+      await supabase.from("games").update(
+          {"player2_id": userId, "status": "in_progress"}).eq("id", gameId);
+
+      final response_3 = await supabase
+          .from('games')
+          .select('prompt')
+          .eq('id', gameId)
+          .single();
+      prompt = response_3['prompt'];
+      //}
+      //else {
+      //  gameId = const Uuid().v4();
+      //  await supabase.from("games").insert({
+      //    "id": gameId,
+      //    "prompt": prompt,
+      //    "player1_id": userId,
+      //    "status": "waiting"
+      //  });
+>>>>>>> f05cd2d98a14263037cb19f99c914bc73baa13b2
       // }
     } else {
+      //fetchPromptAndMatch();
       gameId = const Uuid().v4();
       await supabase.from("games").insert({
         "id": gameId,

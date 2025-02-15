@@ -123,8 +123,12 @@ class SignUp extends StatelessWidget {
         child: ListView(
           padding: const EdgeInsets.all(24.0),
           children: [
-            const SizedBox(height: 150),
-
+            Container(
+              width: 0.5 * screenWidth,
+              height: 0.5*screenWidth,
+              child: Image.asset('lib/images/logo.png'),
+            ),
+            const SizedBox(height: 25),
             Align(
               alignment: Alignment.center,
               child: Text(
